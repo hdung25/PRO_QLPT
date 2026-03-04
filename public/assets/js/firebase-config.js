@@ -1,25 +1,24 @@
 /**
  * Firebase Client Configuration
+ * Project: Quản lý Nhà trọ
  * 
- * ⚠️ TEMPLATE - Cần thay bằng config thật từ Firebase Console.
- * 
- * Lấy config tại: Firebase Console > Project Settings > General > Your apps > Web app
+ * Firebase Console: https://console.firebase.google.com/project/quan-ly-nha-tro-a6d22
  */
 
-// TODO: Thay bằng config thật khi setup Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyA_OHKDYpILH1z-sOCUu-nSHdPW9vZ2AEg",
+  authDomain: "quan-ly-nha-tro-a6d22.firebaseapp.com",
+  projectId: "quan-ly-nha-tro-a6d22",
+  storageBucket: "quan-ly-nha-tro-a6d22.firebasestorage.app",
+  messagingSenderId: "361932304025",
+  appId: "1:361932304025:web:75e05b00ac479073df9208",
+  measurementId: "G-RCVGH111PG"
 };
 
-// Kiểm tra Firebase SDK đã load chưa
+// Initialize Firebase (compat mode for browser)
 if (typeof firebase !== 'undefined') {
   firebase.initializeApp(firebaseConfig);
-  console.log('✅ Firebase Client SDK initialized');
+  console.log('✅ Firebase Client SDK initialized - Project:', firebaseConfig.projectId);
 } else {
-  console.warn('⚠️ Firebase SDK chưa được load. Thêm script tags vào HTML.');
+  console.warn('⚠️ Firebase SDK chưa được load. Kiểm tra script tags trong HTML.');
 }

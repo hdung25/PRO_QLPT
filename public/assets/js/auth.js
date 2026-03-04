@@ -10,9 +10,10 @@
 
 const Auth = {
     /** 
-     * Chế độ Demo - đặt false khi có Firebase thật 
+     * Chế độ Demo - đặt true để test offline không cần Firebase
+     * Production: false (dùng Firebase Auth thật)
      */
-    DEMO_MODE: true,
+    DEMO_MODE: false,
 
     /**
      * Tài khoản demo (chỉ dùng khi DEMO_MODE = true)
@@ -68,27 +69,37 @@ const Auth = {
 
     /**
      * Đăng nhập qua Firebase Auth
-     * TODO: Kích hoạt khi có Firebase config thật
      */
     async firebaseLogin(email, password) {
         if (typeof firebase === 'undefined') {
-            throw new Error('Firebase SDK chưa được tải. Vui lòng kiểm tra cấu hình.');
+            throw new Error('Firebase SDK chưa được tải. Vui lòng kiểm tra kết nối mạng.');
         }
 
-        const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
-        const token = await cred.user.getIdToken();
+        try {
+            const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const token = await cred.user.getIdToken();
 
-        // Lấy user info từ backend
-        const res = await fetch('/api/auth/verify.php', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
+            const user = {
+                uid: cred.user.uid,
+                email: cred.user.email,
+                display_name: cred.user.displayName || cred.user.email.split('@')[0],
+                role: 'admin' // TODO: Lấy role từ Firestore khi có API backend
+            };
 
-        if (!data.success) {
-            throw new Error(data.error || 'Xác thực thất bại.');
+            return { token, user };
+        } catch (firebaseError) {
+            // Map Firebase error codes sang tiếng Việt
+            const errorMap = {
+                'auth/user-not-found': 'Email không tồn tại trong hệ thống.',
+                'auth/wrong-password': 'Mật khẩu không đúng.',
+                'auth/invalid-email': 'Email không hợp lệ.',
+                'auth/user-disabled': 'Tài khoản đã bị vô hiệu hóa.',
+                'auth/too-many-requests': 'Quá nhiều lần thử. Vui lòng thử lại sau.',
+                'auth/invalid-credential': 'Email hoặc mật khẩu không đúng.',
+                'auth/network-request-failed': 'Lỗi kết nối mạng. Vui lòng kiểm tra internet.'
+            };
+            throw new Error(errorMap[firebaseError.code] || firebaseError.message);
         }
-
-        return { token, user: data.data };
     },
 
     // ─── Session Management ───

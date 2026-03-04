@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hệ thống quản lý nhà trọ - Tổng quan">
+    <title>Tổng quan | Quản lý Nhà trọ</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Logo -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo"><i data-lucide="building-2"></i></div>
+                <div class="sidebar-brand">
+                    <h1>Nhà Trọ</h1>
+                    <span>Hệ thống quản lý</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Menu chính</div>
+
+                <a href="dashboard.html" class="nav-item" data-page="dashboard.html">
+                    <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+                    <span>Tổng quan</span>
+                </a>
+
+                <a href="rooms.html" class="nav-item" data-page="rooms.html">
+                    <span class="nav-icon"><i data-lucide="door-open"></i></span>
+                    <span>Phòng trọ</span>
+                </a>
+
+                <a href="contracts.html" class="nav-item" data-page="contracts.html">
+                    <span class="nav-icon"><i data-lucide="file-text"></i></span>
+                    <span>Hợp đồng</span>
+                </a>
+
+                <a href="billing.html" class="nav-item" data-page="billing.html">
+                    <span class="nav-icon"><i data-lucide="wallet"></i></span>
+                    <span>Tính tiền</span>
+                    <span class="nav-badge">3</span>
+                </a>
+
+                <div class="nav-section-title">Hệ thống</div>
+
+                <a href="settings.html" class="nav-item" data-page="settings.html">
+                    <span class="nav-icon"><i data-lucide="settings"></i></span>
+                    <span>Cài đặt</span>
+                </a>
+            </nav>
+
+            <!-- User -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user" onclick="handleLogout()" style="cursor:pointer;" title="Nhấn để đăng xuất">
+                    <div class="sidebar-avatar" id="sidebarUserAvatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+                        <div class="sidebar-user-role" id="sidebarUserRole">Quản trị viên</div>
+                    </div>
+                    <span style="margin-left:auto; opacity:0.6;"><i data-lucide="log-out"></i></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ========== MAIN CONTENT ========== -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i
+                            data-lucide="menu"></i></button>
+                    <div>
+                        <h1 class="page-title">Tổng quan</h1>
+                        <p class="page-subtitle">Chào mừng trở lại! Đây là tình hình nhà trọ hôm nay.</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <span class="search-icon"><i data-lucide="search"></i></span>
+                        <input type="text" placeholder="Tìm kiếm phòng, khách..." id="globalSearch">
+                    </div>
+                    <button class="header-icon-btn" title="Thông báo">
+                        <i data-lucide="bell"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+
+                <!-- Stat Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-info">
+                            <h3>Tổng số phòng</h3>
+                            <div class="stat-value">24</div>
+                            <div class="stat-change up">↑ 2 phòng mới</div>
+                        </div>
+                        <div class="stat-icon blue"><i data-lucide="building"></i></div>
+                    </div>
+
+                    <div class="stat-card green">
+                        <div class="stat-info">
+                            <h3>Đang cho thuê</h3>
+                            <div class="stat-value">18</div>
+                            <div class="stat-change">75% công suất</div>
+                        </div>
+                        <div class="stat-icon green"><i data-lucide="check-circle"></i></div>
+                    </div>
+
+                    <div class="stat-card yellow">
+                        <div class="stat-info">
+                            <h3>Phòng trống</h3>
+                            <div class="stat-value">6</div>
+                            <div class="stat-change">Sẵn sàng cho thuê</div>
+                        </div>
+                        <div class="stat-icon yellow"><i data-lucide="key"></i></div>
+                    </div>
+
+                    <div class="stat-card red">
+                        <div class="stat-info">
+                            <h3>Chưa thanh toán</h3>
+                            <div class="stat-value">3</div>
+                            <div class="stat-change down">↓ Cần thu</div>
+                        </div>
+                        <div class="stat-icon red"><i data-lucide="clock"></i></div>
+                    </div>
+                </div>
+
+                <!-- Tables Row -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+                    <!-- Hóa đơn chờ thanh toán -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Hóa đơn chờ thanh toán</h2>
+                            <a href="billing.html" class="btn btn-ghost btn-sm">Xem tất cả →</a>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Phòng</th>
+                                        <th>Khách thuê</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unpaidBillsTable">
+                                    <tr>
+                                        <td><strong>P101</strong></td>
+                                        <td>Nguyễn Văn A</td>
+                                        <td>3.735.000 ₫</td>
+                                        <td><span class="badge badge-danger"><span class="badge-dot"></span> Chưa
+                                                TT</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P205</strong></td>
+                                        <td>Trần Thị B</td>
+                                        <td>4.120.000 ₫</td>
+                                        <td><span class="badge badge-danger"><span class="badge-dot"></span> Chưa
+                                                TT</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P302</strong></td>
+                                        <td>Lê Văn C</td>
+                                        <td>3.280.000 ₫</td>
+                                        <td><span class="badge badge-warning"><span class="badge-dot"></span> Quá
+                                                hạn</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Hợp đồng sắp hết hạn -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Hợp đồng sắp hết hạn</h2>
+                            <a href="contracts.html" class="btn btn-ghost btn-sm">Xem tất cả →</a>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Phòng</th>
+                                        <th>Khách thuê</th>
+                                        <th>Hết hạn</th>
+                                        <th>Còn lại</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expiringContractsTable">
+                                    <tr>
+                                        <td><strong>P103</strong></td>
+                                        <td>Phạm Văn D</td>
+                                        <td>15/03/2026</td>
+                                        <td><span class="badge badge-danger"><span class="badge-dot"></span> 11
+                                                ngày</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P201</strong></td>
+                                        <td>Hoàng Thị E</td>
+                                        <td>28/03/2026</td>
+                                        <td><span class="badge badge-warning"><span class="badge-dot"></span> 24
+                                                ngày</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P304</strong></td>
+                                        <td>Vũ Minh F</td>
+                                        <td>02/04/2026</td>
+                                        <td><span class="badge badge-info"><span class="badge-dot"></span> 29
+                                                ngày</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /page-content -->
+        </main>
+    </div><!-- /app-layout -->
+
+    <!-- Scripts -->
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

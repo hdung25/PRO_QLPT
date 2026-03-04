@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Đăng nhập - Hệ thống quản lý nhà trọ">
+    <title>Đăng nhập | Quản lý Nhà trọ</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .auth-form {
+            margin-top: 4px;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 16px;
+        }
+
+        .auth-form .form-label {
+            font-size: 0.8rem;
+        }
+
+        .auth-form .form-control {
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .auth-form .btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            margin-top: 4px;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--gray-400);
+            font-size: 0.75rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: var(--gray-600);
+        }
+
+        .login-error {
+            background: var(--danger-50);
+            color: var(--danger-600);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-error.show {
+            display: flex;
+        }
+
+        .login-error-icon svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: var(--primary-600);
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-10vh) scale(1);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-page">
+        <!-- Particles Background -->
+        <div class="particles" id="particles"></div>
+
+        <!-- Login Card -->
+        <div class="auth-card">
+            <div class="auth-logo">
+                <div class="logo-icon"><i data-lucide="building-2" color="white" stroke-width="2"></i></div>
+                <h2>Quản lý Nhà trọ</h2>
+                <p>Đăng nhập để quản lý hệ thống</p>
+            </div>
+
+            <!-- Error Message -->
+            <div class="login-error" id="loginError">
+                <i data-lucide="alert-circle" class="login-error-icon"></i>
+                <span id="loginErrorMsg">Email hoặc mật khẩu không đúng.</span>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email</label>
+                    <input type="email" class="form-control" id="loginEmail" placeholder="admin@nhatro.com" required
+                        autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Mật khẩu</label>
+                    <div class="password-wrapper">
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Nhập mật khẩu"
+                            required autocomplete="current-password" minlength="6">
+                        <button type="button" class="password-toggle" id="passwordToggleBtn" onclick="togglePassword()"
+                            title="Hiện/ẩn mật khẩu">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <a href="#" class="forgot-link">Quên mật khẩu?</a>
+        </div>
+    </div>
+
+    <!-- Auth Module -->
+    <script src="assets/js/auth.js"></script>
+
+    <script>
+        // Redirect nếu đã đăng nhập
+        Auth.redirectIfAuthenticated();
+
+        // Generate floating particles
+        (function () {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.width = p.style.height = (Math.random() * 6 + 3) + 'px';
+                p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                p.style.animationDelay = (Math.random() * 10) + 's';
+                container.appendChild(p);
+            }
+        })();
+
+        // Toggle password visibility
+        function togglePassword() {
+            const input = document.getElementById('loginPassword');
+            const btn = document.getElementById('passwordToggleBtn');
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = '<i data-lucide="eye-off"></i>';
+            } else {
+                input.type = 'password';
+                btn.innerHTML = '<i data-lucide="eye"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const errorMsg = document.getElementById('loginErrorMsg');
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            // Loading state
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
+            btn.textContent = '';
+            errorEl.classList.remove('show');
+
+            try {
+                // Gọi Auth module (tự động chọn Demo hoặc Firebase)
+                const { token, user } = await Auth.login(email, password);
+
+                // Lưu session
+                Auth.saveSession(token, user);
+
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+
+            } catch (error) {
+                errorMsg.textContent = error.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+                errorEl.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                btn.textContent = 'Đăng nhập';
+            }
+        }
+    </script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

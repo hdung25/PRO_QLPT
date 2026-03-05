@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tính tiền điện nước - Xuất phiếu thu">
+    <title>Tính tiền | Quản lý Nhà trọ</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <!-- Roboto font for Vietnamese Unicode support in PDF -->
+    <script src="assets/js/roboto-font.js"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo"><i data-lucide="building-2"></i></div>
+                <div class="sidebar-brand">
+                    <h1>Nhà Trọ</h1>
+                    <span>Hệ thống quản lý</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Menu chính</div>
+                <a href="dashboard.html" class="nav-item" data-page="dashboard.html">
+                    <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Tổng quan</span>
+                </a>
+                <a href="rooms.html" class="nav-item" data-page="rooms.html">
+                    <span class="nav-icon"><i data-lucide="door-open"></i></span><span>Phòng trọ</span>
+                </a>
+                <a href="contracts.html" class="nav-item" data-page="contracts.html">
+                    <span class="nav-icon"><i data-lucide="file-text"></i></span><span>Hợp đồng</span>
+                </a>
+                <a href="billing.html" class="nav-item" data-page="billing.html">
+                    <span class="nav-icon"><i data-lucide="wallet"></i></span><span>Tính tiền</span>
+                </a>
+                <div class="nav-section-title">Hệ thống</div>
+                <a href="settings.html" class="nav-item" data-page="settings.html">
+                    <span class="nav-icon"><i data-lucide="settings"></i></span><span>Cài đặt</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user sidebar-user-cursor" onclick="handleLogout()" title="Nhấn để đăng xuất">
+                    <div class="sidebar-avatar" id="sidebarUserAvatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+                        <div class="sidebar-user-role" id="sidebarUserRole">Quản trị viên</div>
+                    </div>
+                    <span class="sidebar-logout-icon"><i data-lucide="log-out"></i></span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ========== MAIN ========== -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i
+                            data-lucide="menu"></i></button>
+                    <div>
+                        <h1 class="page-title">Tính tiền điện nước</h1>
+                        <p class="page-subtitle">Nhập chỉ số, tính tiền, xuất phiếu thu</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="create" onclick="switchTab('create')">
+                        <i data-lucide="calculator"></i> Tạo hóa đơn
+                    </button>
+                    <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
+                        <i data-lucide="clock"></i> Lịch sử (<span id="billCount">0</span>)
+                    </button>
+                </div>
+
+                <!-- TAB: Create Bill -->
+                <div class="tab-content active" id="tab-create">
+                    <div class="grid-2">
+
+                        <!-- Left: Form -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Nhập chỉ số</h2>
+                            </div>
+                            <div class="card-body">
+                                <!-- Room Selection -->
+                                <div class="form-group">
+                                    <label class="form-label">Chọn phòng <span class="required">*</span></label>
+                                    <select class="form-control" id="billRoom" onchange="onBillRoomChange()">
+                                        <option value="">— Chọn phòng —</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Người thuê</label>
+                                    <div class="form-control" style="background:var(--gray-50);" id="billTenantInfo">—
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Tháng</label>
+                                        <input type="month" class="form-control" id="billMonth">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Tiền phòng</label>
+                                        <input type="number" class="form-control" id="billRoomRent" min="0"
+                                            oninput="calculateBill()">
+                                    </div>
+                                </div>
+
+                                <!-- Electricity -->
+                                <div class="form-group mb-2">
+                                    <label class="form-label">⚡ Chỉ số Điện (kWh)</label>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size:0.8rem;color:var(--gray-500);">Chỉ số
+                                            cũ</label>
+                                        <input type="number" class="form-control" id="billElecOld" min="0"
+                                            oninput="calculateBill()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size:0.8rem;color:var(--gray-500);">Chỉ số
+                                            mới</label>
+                                        <input type="number" class="form-control" id="billElecNew" min="0"
+                                            oninput="calculateBill()">
+                                    </div>
+                                </div>
+
+                                <!-- Water -->
+                                <div class="form-group mb-2">
+                                    <label class="form-label">💧 Chỉ số Nước (m³)</label>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size:0.8rem;color:var(--gray-500);">Chỉ số
+                                            cũ</label>
+                                        <input type="number" class="form-control" id="billWaterOld" min="0"
+                                            oninput="calculateBill()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size:0.8rem;color:var(--gray-500);">Chỉ số
+                                            mới</label>
+                                        <input type="number" class="form-control" id="billWaterNew" min="0"
+                                            oninput="calculateBill()">
+                                    </div>
+                                </div>
+
+                                <!-- Extra Fees -->
+                                <div class="form-group">
+                                    <label class="form-label">Phụ phí</label>
+                                    <div id="extraFeesContainer"></div>
+                                    <button type="button" class="add-fee-btn" onclick="addFeeRow('', '')">
+                                        <i data-lucide="plus"></i> Thêm phí
+                                    </button>
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="form-group">
+                                    <label class="form-label">Ghi chú</label>
+                                    <textarea class="form-control" id="billNotes" rows="2"
+                                        placeholder="Ghi chú thêm..."></textarea>
+                                </div>
+
+                                <button class="btn btn-primary btn-lg" onclick="saveBill()" style="width:100%;">
+                                    <i data-lucide="save"></i> Lưu hóa đơn
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right: Preview -->
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title">👁 Preview tính tiền</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Tiền phòng</span>
+                                        <span class="detail-value" id="previewRoomRent">0 ₫</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">⚡ Điện</span>
+                                        <span class="detail-value">
+                                            <span id="previewElecUsage">0 kWh</span> =
+                                            <strong id="previewElecTotal">0 ₫</strong>
+                                        </span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">💧 Nước</span>
+                                        <span class="detail-value">
+                                            <span id="previewWaterUsage">0 m³</span> =
+                                            <strong id="previewWaterTotal">0 ₫</strong>
+                                        </span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Phụ phí</span>
+                                        <span class="detail-value" id="previewExtraTotal">0 ₫</span>
+                                    </div>
+                                    <div class="detail-row"
+                                        style="border-top:2px solid var(--gray-800); padding-top:16px; margin-top:8px;">
+                                        <span class="detail-label" style="font-weight:700; font-size:1rem;">TỔNG
+                                            CỘNG</span>
+                                        <span class="detail-value"
+                                            style="font-weight:800; font-size:1.25rem; color:var(--danger-600);"
+                                            id="previewGrandTotal">0 ₫</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- TAB: History -->
+                <div class="tab-content" id="tab-history">
+                    <div class="card">
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Phòng</th>
+                                        <th>Người thuê</th>
+                                        <th>Tháng</th>
+                                        <th>Tiền điện</th>
+                                        <th>Tiền nước</th>
+                                        <th>Tổng cộng</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="billsHistoryBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ========== MODAL: Bill Preview ========== -->
+    <div class="modal-overlay" id="billPreviewModal">
+        <div class="modal" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Phiếu thu</h3>
+                <button class="modal-close" onclick="Modal.close('billPreviewModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" id="billPreviewContent"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="Modal.close('billPreviewModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/datastore.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/billing.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

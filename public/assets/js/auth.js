@@ -13,7 +13,7 @@ const Auth = {
      * Chế độ Demo - đặt true để test offline không cần Firebase
      * Production: false (dùng Firebase Auth thật)
      */
-    DEMO_MODE: false,
+    DEMO_MODE: true,
 
     /**
      * Tài khoản demo (chỉ dùng khi DEMO_MODE = true)
@@ -21,9 +21,16 @@ const Auth = {
     DEMO_ACCOUNTS: [
         {
             email: 'admin@nhatro.com',
-            password: 'admin123',
+            password: 'Admin@123456',
             uid: 'demo_admin_001',
             display_name: 'Admin',
+            role: 'admin'
+        },
+        {
+            email: 'troly@nhatro.com',
+            password: 'Troly@123456',
+            uid: 'demo_troly_001',
+            display_name: 'Trợ lí Admin',
             role: 'admin'
         }
     ],

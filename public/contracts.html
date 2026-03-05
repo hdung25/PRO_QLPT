@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quản lý hợp đồng thuê phòng trọ">
+    <title>Hợp đồng | Quản lý Nhà trọ</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo"><i data-lucide="building-2"></i></div>
+                <div class="sidebar-brand">
+                    <h1>Nhà Trọ</h1>
+                    <span>Hệ thống quản lý</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Menu chính</div>
+                <a href="dashboard.html" class="nav-item" data-page="dashboard.html">
+                    <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Tổng quan</span>
+                </a>
+                <a href="rooms.html" class="nav-item" data-page="rooms.html">
+                    <span class="nav-icon"><i data-lucide="door-open"></i></span><span>Phòng trọ</span>
+                </a>
+                <a href="contracts.html" class="nav-item" data-page="contracts.html">
+                    <span class="nav-icon"><i data-lucide="file-text"></i></span><span>Hợp đồng</span>
+                </a>
+                <a href="billing.html" class="nav-item" data-page="billing.html">
+                    <span class="nav-icon"><i data-lucide="wallet"></i></span><span>Tính tiền</span>
+                </a>
+                <div class="nav-section-title">Hệ thống</div>
+                <a href="settings.html" class="nav-item" data-page="settings.html">
+                    <span class="nav-icon"><i data-lucide="settings"></i></span><span>Cài đặt</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user sidebar-user-cursor" onclick="handleLogout()" title="Nhấn để đăng xuất">
+                    <div class="sidebar-avatar" id="sidebarUserAvatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+                        <div class="sidebar-user-role" id="sidebarUserRole">Quản trị viên</div>
+                    </div>
+                    <span class="sidebar-logout-icon"><i data-lucide="log-out"></i></span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ========== MAIN ========== -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i
+                            data-lucide="menu"></i></button>
+                    <div>
+                        <h1 class="page-title">Hợp đồng</h1>
+                        <p class="page-subtitle"><span id="contractCount">0</span> hợp đồng đang hiệu lực</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="openAddContract()">
+                        <i data-lucide="plus"></i> Tạo hợp đồng
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <select class="form-control" id="filterContractStatus" onchange="filterContracts()"
+                            style="width:auto;min-width:170px;">
+                            <option value="">Tất cả</option>
+                            <option value="active">🟢 Đang hiệu lực</option>
+                            <option value="terminated">⚫ Đã kết thúc</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Contracts Table -->
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Phòng</th>
+                                    <th>Người thuê</th>
+                                    <th>SĐT</th>
+                                    <th>Thời hạn</th>
+                                    <th>Giá thuê</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contractsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========== MODAL: Create/Edit Contract ========== -->
+    <div class="modal-overlay" id="contractModal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="contractModalTitle">Tạo hợp đồng mới</h3>
+                <button class="modal-close" onclick="Modal.close('contractModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="contractForm" onsubmit="event.preventDefault(); saveContract();">
+                    <input type="hidden" id="contractId">
+
+                    <!-- Room Selection -->
+                    <div class="form-group">
+                        <label class="form-label">Phòng <span class="required">*</span></label>
+                        <select class="form-control" id="contractRoom" required onchange="onRoomChange()">
+                            <option value="">— Chọn phòng trống —</option>
+                        </select>
+                    </div>
+
+                    <!-- Tenant Info -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Họ tên người thuê <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="contractTenantName" placeholder="Nguyễn Văn A"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" id="contractTenantPhone" placeholder="0901234567">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Số CCCD/CMND</label>
+                        <input type="text" class="form-control" id="contractTenantId" placeholder="079123456789">
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ngày bắt đầu <span class="required">*</span></label>
+                            <input type="date" class="form-control" id="contractStart" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ngày kết thúc <span class="required">*</span></label>
+                            <input type="date" class="form-control" id="contractEnd" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Giá thuê (VNĐ/tháng)</label>
+                            <input type="number" class="form-control" id="contractRent" placeholder="3000000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tiền cọc (VNĐ)</label>
+                            <input type="number" class="form-control" id="contractDeposit" placeholder="3000000"
+                                min="0">
+                        </div>
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div class="form-group">
+                        <label class="form-label">Upload giấy tờ</label>
+                        <div class="form-hint mb-2">Ảnh CCCD mặt trước, mặt sau, scan hợp đồng (JPG/PNG, tối đa 5MB)
+                        </div>
+
+                        <div class="upload-group">
+                            <label class="form-label" style="font-size:0.8rem; color:var(--gray-500);">CCCD mặt
+                                trước</label>
+                            <input type="file" class="form-control" id="uploadFront" accept="image/*"
+                                onchange="handleFileUpload('uploadFront','id_card_front')">
+                            <div id="preview_id_card_front"></div>
+                        </div>
+
+                        <div class="upload-group">
+                            <label class="form-label" style="font-size:0.8rem; color:var(--gray-500);">CCCD mặt
+                                sau</label>
+                            <input type="file" class="form-control" id="uploadBack" accept="image/*"
+                                onchange="handleFileUpload('uploadBack','id_card_back')">
+                            <div id="preview_id_card_back"></div>
+                        </div>
+
+                        <div class="upload-group">
+                            <label class="form-label" style="font-size:0.8rem; color:var(--gray-500);">Scan hợp
+                                đồng</label>
+                            <input type="file" class="form-control" id="uploadContract" accept="image/*"
+                                onchange="handleFileUpload('uploadContract','contract_image')">
+                            <div id="preview_contract_image"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="Modal.close('contractModal')">Hủy</button>
+                <button class="btn btn-primary" onclick="saveContract()">
+                    <i data-lucide="check"></i> Lưu hợp đồng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: View Detail ========== -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Chi tiết hợp đồng</h3>
+                <button class="modal-close" onclick="Modal.close('detailModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- Rendered by JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="Modal.close('detailModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: Switch Tenant ========== -->
+    <div class="modal-overlay" id="switchModal">
+        <div class="modal" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🔄 Đổi người thuê</h3>
+                <button class="modal-close" onclick="Modal.close('switchModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-hint mb-3"
+                    style="background:var(--warning-50); padding:12px; border-radius:8px; color:var(--warning-600);">
+                    <strong>Lưu ý:</strong> Hợp đồng cũ sẽ được lưu vào lịch sử. Thông tin mới sẽ tạo hợp đồng mới.
+                </div>
+                <form id="switchForm" onsubmit="event.preventDefault(); saveSwitchTenant();">
+                    <input type="hidden" id="switchContractId">
+
+                    <div class="form-group">
+                        <label class="form-label">Phòng</label>
+                        <div class="form-control" style="background:var(--gray-50);" id="switchRoomInfo">—</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Họ tên người thuê mới <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="switchTenantName" placeholder="Tên mới"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SĐT mới</label>
+                            <input type="tel" class="form-control" id="switchTenantPhone" placeholder="0901234567">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">CCCD/CMND mới</label>
+                        <input type="text" class="form-control" id="switchTenantId" placeholder="079123456789">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ngày bắt đầu</label>
+                            <input type="date" class="form-control" id="switchStart">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ngày kết thúc</label>
+                            <input type="date" class="form-control" id="switchEnd">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Giá thuê</label>
+                            <input type="number" class="form-control" id="switchRent" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tiền cọc</label>
+                            <input type="number" class="form-control" id="switchDeposit" min="0">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="Modal.close('switchModal')">Hủy</button>
+                <button class="btn btn-primary" onclick="saveSwitchTenant()">
+                    <i data-lucide="check"></i> Xác nhận đổi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/datastore.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/contracts.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

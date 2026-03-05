@@ -68,13 +68,13 @@
 
             <!-- User -->
             <div class="sidebar-footer">
-                <div class="sidebar-user" onclick="handleLogout()" style="cursor:pointer;" title="Nhấn để đăng xuất">
+                <div class="sidebar-user sidebar-user-cursor" onclick="handleLogout()" title="Nhấn để đăng xuất">
                     <div class="sidebar-avatar" id="sidebarUserAvatar">A</div>
                     <div class="sidebar-user-info">
                         <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
                         <div class="sidebar-user-role" id="sidebarUserRole">Quản trị viên</div>
                     </div>
-                    <span style="margin-left:auto; opacity:0.6;"><i data-lucide="log-out"></i></span>
+                    <span class="sidebar-logout-icon"><i data-lucide="log-out"></i></span>
                 </div>
             </div>
         </aside>
@@ -115,8 +115,8 @@
                     <div class="stat-card blue">
                         <div class="stat-info">
                             <h3>Tổng số phòng</h3>
-                            <div class="stat-value">24</div>
-                            <div class="stat-change up">↑ 2 phòng mới</div>
+                            <div class="stat-value" id="statTotalRooms">0</div>
+                            <div class="stat-change" id="statTotalRoomsNote">—</div>
                         </div>
                         <div class="stat-icon blue"><i data-lucide="building"></i></div>
                     </div>
@@ -124,8 +124,8 @@
                     <div class="stat-card green">
                         <div class="stat-info">
                             <h3>Đang cho thuê</h3>
-                            <div class="stat-value">18</div>
-                            <div class="stat-change">75% công suất</div>
+                            <div class="stat-value" id="statOccupied">0</div>
+                            <div class="stat-change" id="statOccupiedNote">—</div>
                         </div>
                         <div class="stat-icon green"><i data-lucide="check-circle"></i></div>
                     </div>
@@ -133,7 +133,7 @@
                     <div class="stat-card yellow">
                         <div class="stat-info">
                             <h3>Phòng trống</h3>
-                            <div class="stat-value">6</div>
+                            <div class="stat-value" id="statAvailable">0</div>
                             <div class="stat-change">Sẵn sàng cho thuê</div>
                         </div>
                         <div class="stat-icon yellow"><i data-lucide="key"></i></div>
@@ -142,7 +142,7 @@
                     <div class="stat-card red">
                         <div class="stat-info">
                             <h3>Chưa thanh toán</h3>
-                            <div class="stat-value">3</div>
+                            <div class="stat-value" id="statUnpaid">0</div>
                             <div class="stat-change down">↓ Cần thu</div>
                         </div>
                         <div class="stat-icon red"><i data-lucide="clock"></i></div>
@@ -150,7 +150,7 @@
                 </div>
 
                 <!-- Tables Row -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="grid-2">
 
                     <!-- Hóa đơn chờ thanh toán -->
                     <div class="card">
@@ -169,27 +169,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="unpaidBillsTable">
-                                    <tr>
-                                        <td><strong>P101</strong></td>
-                                        <td>Nguyễn Văn A</td>
-                                        <td>3.735.000 ₫</td>
-                                        <td><span class="badge badge-danger"><span class="badge-dot"></span> Chưa
-                                                TT</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P205</strong></td>
-                                        <td>Trần Thị B</td>
-                                        <td>4.120.000 ₫</td>
-                                        <td><span class="badge badge-danger"><span class="badge-dot"></span> Chưa
-                                                TT</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P302</strong></td>
-                                        <td>Lê Văn C</td>
-                                        <td>3.280.000 ₫</td>
-                                        <td><span class="badge badge-warning"><span class="badge-dot"></span> Quá
-                                                hạn</span></td>
-                                    </tr>
+                                    <!-- Dynamic -->
                                 </tbody>
                             </table>
                         </div>
@@ -212,27 +192,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="expiringContractsTable">
-                                    <tr>
-                                        <td><strong>P103</strong></td>
-                                        <td>Phạm Văn D</td>
-                                        <td>15/03/2026</td>
-                                        <td><span class="badge badge-danger"><span class="badge-dot"></span> 11
-                                                ngày</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P201</strong></td>
-                                        <td>Hoàng Thị E</td>
-                                        <td>28/03/2026</td>
-                                        <td><span class="badge badge-warning"><span class="badge-dot"></span> 24
-                                                ngày</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P304</strong></td>
-                                        <td>Vũ Minh F</td>
-                                        <td>02/04/2026</td>
-                                        <td><span class="badge badge-info"><span class="badge-dot"></span> 29
-                                                ngày</span></td>
-                                    </tr>
+                                    <!-- Dynamic -->
                                 </tbody>
                             </table>
                         </div>
@@ -246,11 +206,96 @@
     <!-- Firebase SDK (compat mode) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
 
     <!-- Scripts -->
     <script src="assets/js/auth.js"></script>
+    <script src="assets/js/datastore.js"></script>
     <script src="assets/js/app.js"></script>
+
+    <script>
+        // Dashboard: Realtime data from Firestore
+        document.addEventListener('DOMContentLoaded', () => {
+            // Start listeners - dashboard auto-updates on any data change
+            DataStore.listen('rooms', () => refreshDashboard());
+            DataStore.listen('contracts', () => refreshDashboard());
+            DataStore.listen('bills', () => refreshDashboard());
+            DataStore.listenSettings(() => { });
+        });
+
+        function refreshDashboard() {
+            loadDashboardStats();
+            loadUnpaidBills();
+            loadExpiringContracts();
+        }
+
+        function loadDashboardStats() {
+            const rooms = DataStore.rooms.getAll();
+            const occupied = rooms.filter(r => r.status === 'occupied').length;
+            const available = rooms.filter(r => r.status === 'available').length;
+            const unpaidBills = DataStore.bills.getUnpaid();
+
+            document.getElementById('statTotalRooms').textContent = rooms.length;
+            document.getElementById('statTotalRoomsNote').textContent = `${rooms.length} phòng`;
+            document.getElementById('statOccupied').textContent = occupied;
+            const pct = rooms.length > 0 ? Math.round((occupied / rooms.length) * 100) : 0;
+            document.getElementById('statOccupiedNote').textContent = `${pct}% công suất`;
+            document.getElementById('statAvailable').textContent = available;
+            document.getElementById('statUnpaid').textContent = unpaidBills.length;
+        }
+
+        function loadUnpaidBills() {
+            const unpaid = DataStore.bills.getUnpaid();
+            const tbody = document.getElementById('unpaidBillsTable');
+
+            if (unpaid.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:24px;">✅ Tất cả hóa đơn đã thanh toán</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = unpaid.slice(0, 5).map(b => `
+                <tr>
+                    <td><strong>${b.room_number}</strong></td>
+                    <td>${b.tenant_name}</td>
+                    <td>${formatMoney(b.grand_total)}</td>
+                    <td><span class="badge badge-danger"><span class="badge-dot"></span> Chưa TT</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function loadExpiringContracts() {
+            const now = new Date();
+            const contracts = DataStore.contracts.getActive()
+                .map(c => ({ ...c, daysLeft: Math.ceil((new Date(c.end_date) - now) / (1000 * 60 * 60 * 24)) }))
+                .filter(c => c.daysLeft <= 60)
+                .sort((a, b) => a.daysLeft - b.daysLeft);
+
+            const tbody = document.getElementById('expiringContractsTable');
+
+            if (contracts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:24px;">✅ Không có hợp đồng sắp hết hạn</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = contracts.slice(0, 5).map(c => {
+                let badgeClass = 'badge-info';
+                if (c.daysLeft < 0) badgeClass = 'badge-danger';
+                else if (c.daysLeft <= 15) badgeClass = 'badge-danger';
+                else if (c.daysLeft <= 30) badgeClass = 'badge-warning';
+
+                const label = c.daysLeft < 0 ? 'Quá hạn' : `${c.daysLeft} ngày`;
+
+                return `
+                <tr>
+                    <td><strong>${c.room_number}</strong></td>
+                    <td>${c.tenant_name}</td>
+                    <td>${formatDate(c.end_date)}</td>
+                    <td><span class="badge ${badgeClass}"><span class="badge-dot"></span> ${label}</span></td>
+                </tr>`;
+            }).join('');
+        }
+    </script>
     <script>lucide.createIcons();</script>
 </body>
 

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cài đặt hệ thống - Đơn giá, thông tin nhà trọ">
+    <title>Cài đặt | Quản lý Nhà trọ</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo"><i data-lucide="building-2"></i></div>
+                <div class="sidebar-brand">
+                    <h1>Nhà Trọ</h1>
+                    <span>Hệ thống quản lý</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Menu chính</div>
+                <a href="dashboard.html" class="nav-item" data-page="dashboard.html">
+                    <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Tổng quan</span>
+                </a>
+                <a href="rooms.html" class="nav-item" data-page="rooms.html">
+                    <span class="nav-icon"><i data-lucide="door-open"></i></span><span>Phòng trọ</span>
+                </a>
+                <a href="contracts.html" class="nav-item" data-page="contracts.html">
+                    <span class="nav-icon"><i data-lucide="file-text"></i></span><span>Hợp đồng</span>
+                </a>
+                <a href="billing.html" class="nav-item" data-page="billing.html">
+                    <span class="nav-icon"><i data-lucide="wallet"></i></span><span>Tính tiền</span>
+                </a>
+                <div class="nav-section-title">Hệ thống</div>
+                <a href="settings.html" class="nav-item" data-page="settings.html">
+                    <span class="nav-icon"><i data-lucide="settings"></i></span><span>Cài đặt</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user sidebar-user-cursor" onclick="handleLogout()" title="Nhấn để đăng xuất">
+                    <div class="sidebar-avatar" id="sidebarUserAvatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+                        <div class="sidebar-user-role" id="sidebarUserRole">Quản trị viên</div>
+                    </div>
+                    <span class="sidebar-logout-icon"><i data-lucide="log-out"></i></span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ========== MAIN ========== -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i
+                            data-lucide="menu"></i></button>
+                    <div>
+                        <h1 class="page-title">Cài đặt</h1>
+                        <p class="page-subtitle">Đơn giá, phụ phí, thông tin nhà trọ</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="grid-2">
+
+                    <!-- Đơn giá -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">⚡💧 Đơn giá điện nước</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Đơn giá điện (VNĐ / kWh)</label>
+                                <input type="number" class="form-control" id="settingsElecPrice" min="0">
+                                <div class="form-hint">Giá phổ biến: 3.500 - 4.000 VNĐ/kWh</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Đơn giá nước (VNĐ / m³)</label>
+                                <input type="number" class="form-control" id="settingsWaterPrice" min="0">
+                                <div class="form-hint">Giá phổ biến: 10.000 - 20.000 VNĐ/m³</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin nhà trọ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🏠 Thông tin nhà trọ</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Tên nhà trọ</label>
+                                <input type="text" class="form-control" id="settingsPropertyName"
+                                    placeholder="Nhà trọ Thanh Bình">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" id="settingsPropertyAddress"
+                                    placeholder="123 Đường ABC, Quận 1, TP.HCM">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Tên chủ trọ</label>
+                                    <input type="text" class="form-control" id="settingsLandlordName"
+                                        placeholder="Nguyễn Văn A">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SĐT chủ trọ</label>
+                                    <input type="tel" class="form-control" id="settingsLandlordPhone"
+                                        placeholder="0901234567">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phụ phí mặc định -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">💳 Phụ phí mặc định</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-hint mb-3">Các khoản phí này sẽ tự động điền khi tạo hóa đơn mới.</div>
+                            <div id="defaultFeesContainer"></div>
+                            <button type="button" class="add-fee-btn" onclick="addDefaultFee('', '')">
+                                <i data-lucide="plus"></i> Thêm phí mặc định
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quản lý cơ sở -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🏢 Quản lý cơ sở</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-hint mb-3">Thêm hoặc xóa các cơ sở/chi nhánh nhà trọ.</div>
+                            <div id="branchesContainer"></div>
+                            <button type="button" class="add-fee-btn" onclick="addBranchRow('')">
+                                <i data-lucide="plus"></i> Thêm cơ sở
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin dữ liệu -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🗄 Dữ liệu</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-hint">Dữ liệu hiện đang lưu trên Firebase Firestore (đồng bộ realtime giữa
+                                các tài khoản).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg" onclick="saveSettings()">
+                        <i data-lucide="save"></i> Lưu cài đặt
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/datastore.js"></script>
+    <script src="assets/js/app.js"></script>
+
+    <script>
+        // Settings: Realtime from Firestore
+        document.addEventListener('DOMContentLoaded', () => {
+            DataStore.listenSettings((settings) => {
+                loadSettings(settings);
+            });
+        });
+
+        function loadSettings(s) {
+            if (!s) s = DataStore.settings.get();
+            document.getElementById('settingsElecPrice').value = s.electricity_price || 0;
+            document.getElementById('settingsWaterPrice').value = s.water_price || 0;
+            document.getElementById('settingsPropertyName').value = s.property_name || '';
+            document.getElementById('settingsPropertyAddress').value = s.property_address || '';
+            document.getElementById('settingsLandlordName').value = s.landlord_name || '';
+            document.getElementById('settingsLandlordPhone').value = s.landlord_phone || '';
+
+            // Default fees
+            const feesContainer = document.getElementById('defaultFeesContainer');
+            feesContainer.innerHTML = '';
+            (s.default_extra_fees || []).forEach(f => addDefaultFee(f.name, f.amount));
+
+            // Branches
+            const branchContainer = document.getElementById('branchesContainer');
+            branchContainer.innerHTML = '';
+            (s.branches || []).forEach(b => addBranchRow(b));
+        }
+
+        function addDefaultFee(name, amount) {
+            const container = document.getElementById('defaultFeesContainer');
+            const row = document.createElement('div');
+            row.className = 'fee-row';
+            row.innerHTML = `
+                <input type="text" class="form-control" placeholder="Tên phí" value="${name || ''}">
+                <input type="number" class="form-control fee-amount" placeholder="Số tiền" value="${amount || ''}" min="0">
+                <button type="button" class="remove-fee" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+            `;
+            container.appendChild(row);
+            lucide.createIcons();
+        }
+
+        function addBranchRow(name) {
+            const container = document.getElementById('branchesContainer');
+            const row = document.createElement('div');
+            row.className = 'fee-row';
+            row.innerHTML = `
+                <input type="text" class="form-control" placeholder="VD: Cơ sở 1 - Quận 1" value="${name || ''}" style="flex:1;">
+                <button type="button" class="remove-fee" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+            `;
+            container.appendChild(row);
+            lucide.createIcons();
+        }
+
+        async function saveSettings() {
+            const defaultFees = [];
+            document.querySelectorAll('#defaultFeesContainer .fee-row').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const name = inputs[0].value.trim();
+                const amount = parseInt(inputs[1].value) || 0;
+                if (name && amount > 0) defaultFees.push({ name, amount });
+            });
+
+            const branches = [];
+            document.querySelectorAll('#branchesContainer .fee-row').forEach(row => {
+                const name = row.querySelector('input').value.trim();
+                if (name) branches.push(name);
+            });
+
+            const data = {
+                electricity_price: parseInt(document.getElementById('settingsElecPrice').value) || 0,
+                water_price: parseInt(document.getElementById('settingsWaterPrice').value) || 0,
+                property_name: document.getElementById('settingsPropertyName').value.trim(),
+                property_address: document.getElementById('settingsPropertyAddress').value.trim(),
+                landlord_name: document.getElementById('settingsLandlordName').value.trim(),
+                landlord_phone: document.getElementById('settingsLandlordPhone').value.trim(),
+                default_extra_fees: defaultFees,
+                branches: branches
+            };
+
+            try {
+                await DataStore.settings.save(data);
+                Toast.success('Lưu cài đặt thành công!');
+            } catch (error) {
+                Toast.error('Lỗi khi lưu: ' + error.message);
+            }
+        }
+    </script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

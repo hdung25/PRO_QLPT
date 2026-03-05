@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow all read/write for now (demo mode)
+    // TODO: Add proper auth rules when using Firebase Auth in production
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

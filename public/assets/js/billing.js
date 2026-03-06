@@ -535,6 +535,35 @@ function exportPdf(id) {
         doc.text(settings.landlord_name || '', leftMargin + 20, y, { align: 'center' });
         doc.text(bill.tenant_name, 133 - 20, y, { align: 'center' });
 
+        // QR Code
+        const pdfRoom = DataStore.rooms.getById(bill.room_id);
+        const pdfBranch = pdfRoom ? pdfRoom.branch : '';
+        const pdfQrCodes = settings.branch_qr_codes || {};
+        const pdfQrData = pdfQrCodes[pdfBranch];
+        if (pdfQrData) {
+            y += lineHeight * 3;
+            if (y + 60 > 210) {
+                doc.addPage();
+                y = 15;
+            }
+            doc.setLineWidth(0.3);
+            doc.line(leftMargin, y, 133, y);
+            y += lineHeight * 1.5;
+            doc.setFontSize(11);
+            doc.setTextColor(26, 86, 219);
+            doc.text('Ma chuyen khoan', centerX, y, { align: 'center' });
+            y += lineHeight;
+            try {
+                const qrWidth = 40;
+                const qrX = centerX - (qrWidth / 2);
+                doc.addImage(pdfQrData, 'PNG', qrX, y, qrWidth, qrWidth);
+            } catch (e) {
+                doc.setFontSize(9);
+                doc.setTextColor(150, 150, 150);
+                doc.text('(Khong the hien thi ma QR)', centerX, y + 5, { align: 'center' });
+            }
+        }
+
         doc.save(`phieu-thu-${bill.room_number}-${bill.billing_month}.pdf`);
         Toast.success('Đã xuất PDF!');
     } else {
@@ -591,5 +620,19 @@ function generateBillHtml(bill, settings) {
                 ${bill.tenant_name}
             </div>
         </div>
+        ${(() => {
+            const qrRoom = DataStore.rooms.getById(bill.room_id);
+            const qrBranch = qrRoom ? qrRoom.branch : '';
+            const qrCodes = settings.branch_qr_codes || {};
+            const qrData = qrCodes[qrBranch];
+            if (qrData) {
+                return '<hr>' +
+                    '<div style="text-align:center;margin-top:16px;">' +
+                    '<p style="font-weight:700;color:#1a56db;margin-bottom:8px;">🏦 Mã chuyển khoản</p>' +
+                    '<img src="' + qrData + '" alt="Mã QR" style="max-width:200px;max-height:200px;border-radius:12px;border:2px solid #ddd;">' +
+                    '</div>';
+            }
+            return '';
+        })()}
     `;
 }

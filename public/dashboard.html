@@ -55,7 +55,7 @@
                 <a href="billing.html" class="nav-item" data-page="billing.html">
                     <span class="nav-icon"><i data-lucide="wallet"></i></span>
                     <span>Tính tiền</span>
-                    <span class="nav-badge">3</span>
+                    <span class="nav-badge" id="billingBadge" style="display:none;"></span>
                 </a>
 
                 <div class="nav-section-title">Hệ thống</div>
@@ -96,14 +96,6 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <div class="search-box">
-                        <span class="search-icon"><i data-lucide="search"></i></span>
-                        <input type="text" placeholder="Tìm kiếm phòng, khách..." id="globalSearch">
-                    </div>
-                    <button class="header-icon-btn" title="Thông báo">
-                        <i data-lucide="bell"></i>
-                        <span class="notification-dot"></span>
-                    </button>
                 </div>
             </header>
 
@@ -253,6 +245,17 @@
             document.getElementById('statOccupiedNote').textContent = `${pct}% công suất`;
             document.getElementById('statAvailable').textContent = available;
             document.getElementById('statUnpaid').textContent = unpaidBills.length;
+
+            // Update billing badge in sidebar
+            const badge = document.getElementById('billingBadge');
+            if (badge) {
+                if (unpaidBills.length > 0) {
+                    badge.textContent = unpaidBills.length;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
         }
 
         function loadUnpaidBills() {

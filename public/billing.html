@@ -98,11 +98,19 @@
                                 <h2 class="card-title">Nhập chỉ số</h2>
                             </div>
                             <div class="card-body">
+                                <!-- Branch Selection -->
+                                <div class="form-group">
+                                    <label class="form-label">Chọn cơ sở <span class="required">*</span></label>
+                                    <select class="form-control" id="billBranch" onchange="onBillBranchChange()">
+                                        <option value="">— Chọn cơ sở —</option>
+                                    </select>
+                                </div>
+
                                 <!-- Room Selection -->
                                 <div class="form-group">
                                     <label class="form-label">Chọn phòng <span class="required">*</span></label>
                                     <select class="form-control" id="billRoom" onchange="onBillRoomChange()">
-                                        <option value="">— Chọn phòng —</option>
+                                        <option value="">— Chọn cơ sở trước —</option>
                                     </select>
                                 </div>
 
@@ -225,6 +233,17 @@
                             </div>
                         </div>
 
+                        <!-- QR Code Preview -->
+                        <div class="card" id="qrCodeCard" style="display: none;">
+                            <div class="card-header">
+                                <h2 class="card-title">🏦 Mã chuyển khoản</h2>
+                            </div>
+                            <div class="card-body" style="text-align: center;">
+                                <div id="billingQrPreview">
+                                    <p style="color: var(--gray-400);">Chọn cơ sở để hiện mã QR</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

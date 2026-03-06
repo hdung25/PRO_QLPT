@@ -389,6 +389,8 @@ const DataStore = {
                     { name: 'Wifi', amount: 50000 }
                 ],
                 branches: [],
+                branch_qr_codes: {},  // { "Cơ sở 1": "data:image/png;base64,...", ... }
+                assistant_accounts: [],  // [{ email, password, display_name, assigned_branches }]
                 landlord_name: '',
                 landlord_phone: '',
                 property_name: 'Nhà trọ',

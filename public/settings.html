@@ -139,8 +139,8 @@
                         </div>
                     </div>
 
-                    <!-- Quản lý cơ sở -->
-                    <div class="card">
+                    <!-- Quản lý cơ sở (Admin only) -->
+                    <div class="card admin-only">
                         <div class="card-header">
                             <h2 class="card-title">🏢 Quản lý cơ sở</h2>
                         </div>
@@ -150,6 +150,33 @@
                             <button type="button" class="add-fee-btn" onclick="addBranchRow('')">
                                 <i data-lucide="plus"></i> Thêm cơ sở
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Mã chuyển khoản theo cơ sở -->
+                    <div class="card admin-only">
+                        <div class="card-header">
+                            <h2 class="card-title">🏦 Mã chuyển khoản theo cơ sở</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-hint mb-3">Upload hình mã QR chuyển khoản cho từng cơ sở. Mã sẽ hiện trên
+                                trang tính tiền khi chọn đúng cơ sở.</div>
+                            <div id="qrCodesContainer">
+                                <div class="empty-state" style="padding: 24px;">
+                                    <p style="color: var(--gray-400);">Thêm cơ sở trước để upload mã QR.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quản lý tài khoản (Admin only) -->
+                    <div class="card admin-only">
+                        <div class="card-header">
+                            <h2 class="card-title">👥 Quản lý tài khoản</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-hint mb-3">Danh sách tài khoản trợ lý và cơ sở được phân quyền.</div>
+                            <div id="accountsContainer"></div>
                         </div>
                     </div>
 
@@ -185,8 +212,16 @@
     <script src="assets/js/app.js"></script>
 
     <script>
+        // QR codes temp storage (branch -> base64 dataURL)
+        let branchQrCodes = {};
+
         // Settings: Realtime from Firestore
         document.addEventListener('DOMContentLoaded', () => {
+            // Redirect assistants away from settings page
+            if (!isAdmin()) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
             DataStore.listenSettings((settings) => {
                 loadSettings(settings);
             });
@@ -210,6 +245,13 @@
             const branchContainer = document.getElementById('branchesContainer');
             branchContainer.innerHTML = '';
             (s.branches || []).forEach(b => addBranchRow(b));
+
+            // QR Codes
+            branchQrCodes = s.branch_qr_codes || {};
+            renderQrCodesSection(s.branches || []);
+
+            // Accounts
+            renderAccountsSection(s.branches || []);
         }
 
         function addDefaultFee(name, amount) {
@@ -237,6 +279,269 @@
             lucide.createIcons();
         }
 
+        /* ============================================
+           QR CODES PER BRANCH
+           ============================================ */
+
+        function renderQrCodesSection(branches) {
+            const container = document.getElementById('qrCodesContainer');
+            if (branches.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 24px;">
+                        <p style="color: var(--gray-400);">Thêm cơ sở trước để upload mã QR.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = branches.map(branch => {
+                const qrData = branchQrCodes[branch] || '';
+                return `
+                <div class="qr-branch-item" style="border: 1px solid var(--gray-200); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <strong style="font-size: 0.95rem;">📍 ${branch}</strong>
+                        ${qrData ? `<button class="btn btn-ghost btn-sm" onclick="removeQrCode('${branch}')" style="color: var(--danger-500);">
+                            <i data-lucide="trash-2"></i> Xóa ảnh
+                        </button>` : ''}
+                    </div>
+                    <div id="qr-preview-${CSS.escape(branch)}" class="qr-preview-area" style="text-align: center;">
+                        ${qrData ? `<img src="${qrData}" alt="QR ${branch}" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--gray-200);">` : `
+                        <div style="border: 2px dashed var(--gray-300); border-radius: 12px; padding: 24px; cursor: pointer;" onclick="document.getElementById('qr-input-${CSS.escape(branch)}').click()">
+                            <i data-lucide="image-plus" style="width: 32px; height: 32px; color: var(--gray-400);"></i>
+                            <p style="color: var(--gray-400); margin-top: 8px; font-size: 0.85rem;">Nhấn để upload ảnh QR</p>
+                        </div>`}
+                    </div>
+                    <input type="file" id="qr-input-${CSS.escape(branch)}" accept="image/*" style="display:none;" onchange="handleQrUpload(this, '${branch}')">
+                    ${qrData ? '' : `<button class="btn btn-outline btn-sm" style="margin-top: 8px; width: 100%;" onclick="document.getElementById('qr-input-${CSS.escape(branch)}').click()">
+                        <i data-lucide="upload"></i> Chọn ảnh QR
+                    </button>`}
+                </div>`;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function handleQrUpload(input, branch) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowed.includes(file.type)) {
+                Toast.warning('Chỉ hỗ trợ ảnh (JPG, PNG, WebP, GIF).');
+                input.value = '';
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                Toast.warning('Ảnh QR quá lớn (tối đa 2MB).');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                branchQrCodes[branch] = e.target.result;
+                const settings = DataStore.settings.get();
+                renderQrCodesSection(settings.branches || []);
+                Toast.info(`Đã chọn ảnh QR cho ${branch}. Nhấn "Lưu cài đặt" để lưu.`);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeQrCode(branch) {
+            delete branchQrCodes[branch];
+            const settings = DataStore.settings.get();
+            renderQrCodesSection(settings.branches || []);
+            Toast.info(`Đã xóa ảnh QR của ${branch}. Nhấn "Lưu cài đặt" để lưu.`);
+        }
+
+        /* ============================================
+           ACCOUNTS SECTION - Full CRUD
+           ============================================ */
+
+        // In-memory storage for Firestore assistant accounts
+        let assistantAccounts = [];
+
+        function renderAccountsSection(branches) {
+            const container = document.getElementById('accountsContainer');
+            const settings = DataStore.settings.get();
+            assistantAccounts = settings.assistant_accounts || [];
+
+            // Combine hardcoded demo assistant accounts (read-only) + Firestore accounts (editable)
+            const hardcodedAssistants = Auth.DEMO_ACCOUNTS.filter(a => a.role === 'assistant');
+
+            let html = '';
+
+            // Hardcoded demo accounts section
+            if (hardcodedAssistants.length > 0) {
+                html += `
+                <div class="form-hint mb-3" style="color: var(--gray-400); font-size: 0.8rem;">
+                    📋 Tài khoản mặc định (không thể sửa/xóa):
+                </div>
+                <div class="table-wrapper" style="margin-bottom: 16px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Tên</th><th>Email</th><th>Cơ sở</th></tr>
+                        </thead>
+                        <tbody>
+                            ${hardcodedAssistants.map(a => `
+                            <tr style="opacity: 0.6;">
+                                <td>${a.display_name}</td>
+                                <td>${a.email}</td>
+                                <td>${(a.assigned_branches || []).map(b => `<span class="badge badge-info" style="margin:2px;">${b}</span>`).join(' ') || '—'}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            // Firestore-stored accounts (editable)
+            if (assistantAccounts.length > 0) {
+                html += `
+                <div class="form-hint mb-3" style="color: var(--primary-500); font-size: 0.8rem;">
+                    ✏️ Tài khoản do Admin tạo:
+                </div>
+                <div class="table-wrapper" style="margin-bottom: 16px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Tên</th><th>Email</th><th>Cơ sở</th><th style="width:120px;">Thao tác</th></tr>
+                        </thead>
+                        <tbody>
+                            ${assistantAccounts.map((a, idx) => `
+                            <tr>
+                                <td><strong>${a.display_name}</strong></td>
+                                <td>${a.email}</td>
+                                <td>${(a.assigned_branches || []).map(b => `<span class="badge badge-info" style="margin:2px;">${b}</span>`).join(' ') || '—'}</td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="btn btn-ghost btn-icon sm" onclick="editAccount(${idx})" title="Sửa">
+                                            <i data-lucide="pencil"></i>
+                                        </button>
+                                        <button class="btn btn-ghost btn-icon sm" onclick="deleteAccount(${idx})" title="Xóa" style="color:var(--danger-500);">
+                                            <i data-lucide="trash-2"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            if (assistantAccounts.length === 0 && hardcodedAssistants.length === 0) {
+                html += '<div class="form-hint">Chưa có tài khoản trợ lý nào.</div>';
+            }
+
+            // Add account button
+            html += `
+                <button class="btn btn-primary" onclick="openAddAccount()" style="margin-top: 8px;">
+                    <i data-lucide="user-plus"></i> Thêm trợ lý mới
+                </button>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function openAddAccount() {
+            document.getElementById('accountModalTitle').textContent = 'Thêm tài khoản trợ lý';
+            document.getElementById('accountEditIndex').value = '';
+            document.getElementById('accountName').value = '';
+            document.getElementById('accountEmail').value = '';
+            document.getElementById('accountPassword').value = '';
+            document.getElementById('accountEmail').disabled = false;
+            renderBranchCheckboxes([]);
+            Modal.open('accountModal');
+        }
+
+        function editAccount(idx) {
+            const account = assistantAccounts[idx];
+            if (!account) return;
+
+            document.getElementById('accountModalTitle').textContent = 'Sửa tài khoản trợ lý';
+            document.getElementById('accountEditIndex').value = idx;
+            document.getElementById('accountName').value = account.display_name || '';
+            document.getElementById('accountEmail').value = account.email || '';
+            document.getElementById('accountEmail').disabled = true; // Can't change email
+            document.getElementById('accountPassword').value = account.password || '';
+            renderBranchCheckboxes(account.assigned_branches || []);
+            Modal.open('accountModal');
+        }
+
+        function renderBranchCheckboxes(selectedBranches) {
+            const settings = DataStore.settings.get();
+            const branches = settings.branches || [];
+            const container = document.getElementById('accountBranchesCheckboxes');
+
+            if (branches.length === 0) {
+                container.innerHTML = '<div class="form-hint">Chưa có cơ sở nào. Thêm cơ sở trong phần "Quản lý cơ sở" trước.</div>';
+                return;
+            }
+
+            container.innerHTML = branches.map(b => `
+                <label style="display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer;">
+                    <input type="checkbox" value="${b}" ${selectedBranches.includes(b) ? 'checked' : ''} style="width: 18px; height: 18px;">
+                    <span>${b}</span>
+                </label>
+            `).join('');
+        }
+
+        function saveAccount() {
+            const idx = document.getElementById('accountEditIndex').value;
+            const name = document.getElementById('accountName').value.trim();
+            const email = document.getElementById('accountEmail').value.trim().toLowerCase();
+            const password = document.getElementById('accountPassword').value;
+
+            if (!name) { Toast.warning('Vui lòng nhập tên trợ lý.'); return; }
+            if (!email) { Toast.warning('Vui lòng nhập email.'); return; }
+            if (!password || password.length < 6) { Toast.warning('Mật khẩu phải có ít nhất 6 ký tự.'); return; }
+
+            // Check email duplicates
+            const isEdit = idx !== '';
+            const duplicate = assistantAccounts.find((a, i) => a.email === email && i !== parseInt(idx));
+            const hardcodedDup = Auth.DEMO_ACCOUNTS.find(a => a.email === email);
+            if (duplicate || hardcodedDup) {
+                Toast.warning('Email này đã được sử dụng.');
+                return;
+            }
+
+            // Get selected branches
+            const checkboxes = document.querySelectorAll('#accountBranchesCheckboxes input[type="checkbox"]:checked');
+            const assigned_branches = Array.from(checkboxes).map(cb => cb.value);
+
+            const accountData = { display_name: name, email, password, assigned_branches };
+
+            if (isEdit) {
+                assistantAccounts[parseInt(idx)] = accountData;
+                Toast.info('Đã cập nhật. Nhấn "Lưu cài đặt" để lưu.');
+            } else {
+                assistantAccounts.push(accountData);
+                Toast.info('Đã thêm trợ lý. Nhấn "Lưu cài đặt" để lưu.');
+            }
+
+            Modal.close('accountModal');
+            const settings = DataStore.settings.get();
+            renderAccountsSection(settings.branches || []);
+        }
+
+        async function deleteAccount(idx) {
+            const account = assistantAccounts[idx];
+            if (!account) return;
+
+            const ok = await confirmAction(
+                `Xóa tài khoản <strong>${account.display_name}</strong> (${account.email})?`,
+                'Xóa tài khoản'
+            );
+            if (!ok) return;
+
+            assistantAccounts.splice(idx, 1);
+            Toast.info('Đã xóa. Nhấn "Lưu cài đặt" để lưu.');
+            const settings = DataStore.settings.get();
+            renderAccountsSection(settings.branches || []);
+        }
+
+        /* ============================================
+           SAVE SETTINGS
+           ============================================ */
+
         async function saveSettings() {
             const defaultFees = [];
             document.querySelectorAll('#defaultFeesContainer .fee-row').forEach(row => {
@@ -252,6 +557,12 @@
                 if (name) branches.push(name);
             });
 
+            // Clean up QR codes for removed branches
+            const cleanedQrCodes = {};
+            branches.forEach(b => {
+                if (branchQrCodes[b]) cleanedQrCodes[b] = branchQrCodes[b];
+            });
+
             const data = {
                 electricity_price: parseInt(document.getElementById('settingsElecPrice').value) || 0,
                 water_price: parseInt(document.getElementById('settingsWaterPrice').value) || 0,
@@ -260,17 +571,62 @@
                 landlord_name: document.getElementById('settingsLandlordName').value.trim(),
                 landlord_phone: document.getElementById('settingsLandlordPhone').value.trim(),
                 default_extra_fees: defaultFees,
-                branches: branches
+                branches: branches,
+                branch_qr_codes: cleanedQrCodes,
+                assistant_accounts: assistantAccounts
             };
 
             try {
                 await DataStore.settings.save(data);
+                branchQrCodes = cleanedQrCodes;
                 Toast.success('Lưu cài đặt thành công!');
             } catch (error) {
                 Toast.error('Lỗi khi lưu: ' + error.message);
             }
         }
     </script>
+
+    <!-- Account Modal -->
+    <div class="modal-overlay" id="accountModal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="accountModalTitle">Thêm tài khoản trợ lý</h3>
+                <button class="modal-close" onclick="Modal.close('accountModal')">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="accountEditIndex">
+                <div class="form-group">
+                    <label class="form-label">Tên trợ lý <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="accountName" placeholder="VD: Nguyễn Văn B">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email đăng nhập <span class="required">*</span></label>
+                    <input type="email" class="form-control" id="accountEmail" placeholder="VD: troly3@nhatro.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="accountPassword" placeholder="Tối thiểu 6 ký tự">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phân quyền cơ sở</label>
+                    <div id="accountBranchesCheckboxes"
+                        style="border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px;">
+                        <!-- Dynamic checkboxes -->
+                    </div>
+                    <div class="form-hint">Chọn các cơ sở mà trợ lý này được phép quản lý.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="Modal.close('accountModal')">Hủy</button>
+                <button class="btn btn-primary" onclick="saveAccount()">
+                    <i data-lucide="save"></i> Lưu tài khoản
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>lucide.createIcons();</script>
 </body>
 

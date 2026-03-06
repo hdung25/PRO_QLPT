@@ -7,12 +7,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Start realtime listener - auto-renders on data change
     DataStore.listen('rooms', (rooms) => {
-        renderRooms(rooms);
+        renderRooms(filterByPermittedBranches(rooms, 'branch'));
         populateBranchFilter();
     });
     DataStore.listen('contracts', () => {
         // Re-render rooms when contracts change (tenant info)
-        renderRooms(DataStore.rooms.getAll());
+        renderRooms(filterByPermittedBranches(DataStore.rooms.getAll(), 'branch'));
     });
     DataStore.listenSettings(() => {
         populateBranchFilter();
@@ -96,7 +96,11 @@ function populateBranchFilter() {
     if (!select) return;
 
     const settings = DataStore.settings.get();
-    const branches = settings.branches || [];
+    let branches = settings.branches || [];
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        branches = branches.filter(b => permitted.includes(b));
+    }
     const currentValue = select.value;
 
     // Keep first option, rebuild rest
@@ -203,7 +207,7 @@ async function deleteRoom(id) {
 function filterRooms() {
     const statusFilter = document.getElementById('filterStatus').value;
     const branchFilter = document.getElementById('filterBranch').value;
-    let rooms = DataStore.rooms.getAll();
+    let rooms = filterByPermittedBranches(DataStore.rooms.getAll(), 'branch');
 
     if (statusFilter) {
         rooms = rooms.filter(r => r.status === statusFilter);

@@ -24,14 +24,24 @@ const Auth = {
             password: 'Admin@123456',
             uid: 'demo_admin_001',
             display_name: 'Admin',
-            role: 'admin'
+            role: 'admin',
+            assigned_branches: []  // Empty = all branches
         },
         {
-            email: 'troly@nhatro.com',
-            password: 'Troly@123456',
+            email: 'troly1@nhatro.com',
+            password: 'Troly1@123456',
             uid: 'demo_troly_001',
-            display_name: 'Trợ lí Admin',
-            role: 'admin'
+            display_name: 'Trợ lý 1',
+            role: 'assistant',
+            assigned_branches: ['Cơ sở 1']
+        },
+        {
+            email: 'troly2@nhatro.com',
+            password: 'Troly2@123456',
+            uid: 'demo_troly_002',
+            display_name: 'Trợ lý 2',
+            role: 'assistant',
+            assigned_branches: ['Cơ sở 2']
         }
     ],
 
@@ -49,15 +59,39 @@ const Auth = {
     },
 
     /**
-     * Đăng nhập Demo (tài khoản cứng)
+     * Đăng nhập Demo (tài khoản cứng + Firestore)
      */
     async demoLogin(email, password) {
         // Giả lập network delay
         await new Promise(r => setTimeout(r, 1200));
 
-        const account = this.DEMO_ACCOUNTS.find(
+        // Check hardcoded accounts first
+        let account = this.DEMO_ACCOUNTS.find(
             a => a.email === email.trim().toLowerCase() && a.password === password
         );
+
+        // If not found, check Firestore-stored assistant accounts
+        if (!account) {
+            try {
+                const settings = DataStore.settings.get();
+                const firestoreAccounts = settings.assistant_accounts || [];
+                const fsAccount = firestoreAccounts.find(
+                    a => a.email === email.trim().toLowerCase() && a.password === password
+                );
+                if (fsAccount) {
+                    account = {
+                        uid: 'fs_' + btoa(fsAccount.email).replace(/=/g, ''),
+                        email: fsAccount.email,
+                        display_name: fsAccount.display_name,
+                        role: 'assistant',
+                        assigned_branches: fsAccount.assigned_branches || [],
+                        password: fsAccount.password
+                    };
+                }
+            } catch (e) {
+                console.warn('Could not check Firestore accounts:', e);
+            }
+        }
 
         if (!account) {
             throw new Error('Email hoặc mật khẩu không đúng.');
@@ -68,7 +102,8 @@ const Auth = {
             uid: account.uid,
             email: account.email,
             display_name: account.display_name,
-            role: account.role
+            role: account.role,
+            assigned_branches: account.assigned_branches || []
         };
 
         return { token, user };

@@ -30,7 +30,15 @@ function renderContracts(contracts) {
    ============================================ */
 
 function loadContracts() {
-    const contracts = DataStore.contracts.getAll();
+    let contracts = DataStore.contracts.getAll();
+    // Filter by permitted branches (match contract's room to room's branch)
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        contracts = contracts.filter(c => {
+            const room = DataStore.rooms.getById(c.room_id);
+            return room && permitted.includes(room.branch);
+        });
+    }
     const tbody = document.getElementById('contractsTableBody');
     const countEl = document.getElementById('contractCount');
 
@@ -366,6 +374,14 @@ async function terminateContract(id) {
 function filterContracts() {
     const status = document.getElementById('filterContractStatus').value;
     let contracts = DataStore.contracts.getAll();
+    // Filter by permitted branches
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        contracts = contracts.filter(c => {
+            const room = DataStore.rooms.getById(c.room_id);
+            return room && permitted.includes(room.branch);
+        });
+    }
 
     if (status === 'active') contracts = contracts.filter(c => c.status === 'active');
     else if (status === 'terminated') contracts = contracts.filter(c => c.status === 'terminated');

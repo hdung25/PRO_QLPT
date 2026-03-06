@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initUserInfo();
     initPageGreeting();
+    initRoleBasedUI();
 });
 
 /* ============================================
@@ -70,8 +71,67 @@ function initUserInfo() {
     const avatarEl = document.getElementById('sidebarUserAvatar');
 
     if (nameEl) nameEl.textContent = user.display_name || 'Admin';
-    if (roleEl) roleEl.textContent = user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+    const roleLabels = { 'admin': 'Quản trị viên', 'assistant': 'Trợ lý' };
+    if (roleEl) roleEl.textContent = roleLabels[user.role] || 'Nhân viên';
     if (avatarEl) avatarEl.textContent = (user.display_name || 'A').charAt(0).toUpperCase();
+}
+
+/* ============================================
+   ROLE-BASED PERMISSIONS
+   ============================================ */
+
+/**
+ * Check if current user is admin
+ */
+function isAdmin() {
+    const user = Auth.getUser();
+    return user && user.role === 'admin';
+}
+
+/**
+ * Get branches the current user is allowed to see
+ * Returns empty array for admin (means all branches)
+ */
+function getPermittedBranches() {
+    const user = Auth.getUser();
+    if (!user) return [];
+    if (user.role === 'admin') return []; // Empty = all
+    return user.assigned_branches || [];
+}
+
+/**
+ * Filter an array of items by permitted branches
+ * @param {Array} items - Data items (rooms, contracts, etc.)
+ * @param {string} branchField - Field name containing branch value (e.g. 'branch')
+ * @returns {Array} Filtered items
+ */
+function filterByPermittedBranches(items, branchField) {
+    const permitted = getPermittedBranches();
+    if (permitted.length === 0) return items; // Admin sees all
+    return items.filter(item => permitted.includes(item[branchField]));
+}
+
+/**
+ * Initialize role-based UI: hide elements with .admin-only class for non-admin users
+ * Also hides Settings nav link for assistants
+ */
+function initRoleBasedUI() {
+    if (!isAdmin()) {
+        // Hide all admin-only elements
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = 'none';
+        });
+        // Hide Settings nav link
+        const settingsLink = document.querySelector('.nav-item[data-page="settings.html"]');
+        if (settingsLink) settingsLink.style.display = 'none';
+        // Hide "Hệ thống" section title if settings is the only item
+        const sectionTitles = document.querySelectorAll('.nav-section-title');
+        sectionTitles.forEach(title => {
+            if (title.textContent.trim() === 'Hệ thống') {
+                title.style.display = 'none';
+            }
+        });
+    }
 }
 
 /**

@@ -231,10 +231,20 @@
         }
 
         function loadDashboardStats() {
-            const rooms = DataStore.rooms.getAll();
+            let rooms = DataStore.rooms.getAll();
+            const permitted = getPermittedBranches();
+            if (permitted.length > 0) {
+                rooms = rooms.filter(r => permitted.includes(r.branch));
+            }
             const occupied = rooms.filter(r => r.status === 'occupied').length;
             const available = rooms.filter(r => r.status === 'available').length;
-            const unpaidBills = DataStore.bills.getUnpaid();
+            let unpaidBills = DataStore.bills.getUnpaid();
+            if (permitted.length > 0) {
+                unpaidBills = unpaidBills.filter(b => {
+                    const room = DataStore.rooms.getById(b.room_id);
+                    return room && permitted.includes(room.branch);
+                });
+            }
 
             document.getElementById('statTotalRooms').textContent = rooms.length;
             document.getElementById('statTotalRoomsNote').textContent = `${rooms.length} phòng`;
@@ -246,7 +256,14 @@
         }
 
         function loadUnpaidBills() {
-            const unpaid = DataStore.bills.getUnpaid();
+            let unpaid = DataStore.bills.getUnpaid();
+            const permitted = getPermittedBranches();
+            if (permitted.length > 0) {
+                unpaid = unpaid.filter(b => {
+                    const room = DataStore.rooms.getById(b.room_id);
+                    return room && permitted.includes(room.branch);
+                });
+            }
             const tbody = document.getElementById('unpaidBillsTable');
 
             if (unpaid.length === 0) {
@@ -266,7 +283,15 @@
 
         function loadExpiringContracts() {
             const now = new Date();
-            const contracts = DataStore.contracts.getActive()
+            let activeContracts = DataStore.contracts.getActive();
+            const permitted = getPermittedBranches();
+            if (permitted.length > 0) {
+                activeContracts = activeContracts.filter(c => {
+                    const room = DataStore.rooms.getById(c.room_id);
+                    return room && permitted.includes(room.branch);
+                });
+            }
+            const contracts = activeContracts
                 .map(c => ({ ...c, daysLeft: Math.ceil((new Date(c.end_date) - now) / (1000 * 60 * 60 * 24)) }))
                 .filter(c => c.daysLeft <= 60)
                 .sort((a, b) => a.daysLeft - b.daysLeft);

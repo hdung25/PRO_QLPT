@@ -12,14 +12,85 @@ document.addEventListener('DOMContentLoaded', () => {
         loadBillingHistory();
     });
     DataStore.listen('contracts', () => {
-        populateBillingRoomDropdown();
+        // Re-populate room dropdown when contracts change
+        const branchSelect = document.getElementById('billBranch');
+        if (branchSelect && branchSelect.value) {
+            populateBillingRoomDropdown(branchSelect.value);
+        }
     });
     DataStore.listen('rooms', () => { });
     DataStore.listenSettings(() => {
         loadDefaultFees();
+        populateBranchSelector();
     });
     Modal.initCloseOnOverlay();
 });
+
+/* ============================================
+   BRANCH SELECTOR
+   ============================================ */
+
+function populateBranchSelector() {
+    const select = document.getElementById('billBranch');
+    if (!select) return;
+
+    const settings = DataStore.settings.get();
+    let branches = settings.branches || [];
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        branches = branches.filter(b => permitted.includes(b));
+    }
+
+    const currentValue = select.value;
+    let options = '<option value="">— Chọn cơ sở —</option>';
+    branches.forEach(b => {
+        options += `<option value="${b}">${b}</option>`;
+    });
+    select.innerHTML = options;
+
+    // Auto-select if only one branch
+    if (branches.length === 1) {
+        select.value = branches[0];
+        onBillBranchChange();
+    } else if (currentValue) {
+        select.value = currentValue;
+    }
+}
+
+function onBillBranchChange() {
+    const branch = document.getElementById('billBranch').value;
+
+    // Populate rooms for the selected branch
+    populateBillingRoomDropdown(branch);
+
+    // Show QR code for selected branch
+    const qrCard = document.getElementById('qrCodeCard');
+    const qrPreview = document.getElementById('billingQrPreview');
+    if (!branch) {
+        if (qrCard) qrCard.style.display = 'none';
+        return;
+    }
+
+    const settings = DataStore.settings.get();
+    const qrCodes = settings.branch_qr_codes || {};
+    const qrData = qrCodes[branch];
+
+    if (qrData) {
+        qrCard.style.display = 'block';
+        qrPreview.innerHTML = `
+            <p style="font-weight: 600; margin-bottom: 8px; color: var(--gray-600);">🏦 ${branch}</p>
+            <img src="${qrData}" alt="Mã QR ${branch}" style="max-width: 220px; max-height: 220px; border-radius: 12px; border: 2px solid var(--gray-200); box-shadow: var(--shadow-md);">`;
+    } else {
+        qrCard.style.display = 'block';
+        qrPreview.innerHTML = `
+            <p style="color: var(--gray-400); padding: 16px;">Chưa có mã QR cho ${branch}.<br>Vào <strong>Cài đặt</strong> để upload.</p>`;
+    }
+
+    // Reset room selection
+    document.getElementById('billTenantInfo').textContent = '—';
+    document.getElementById('billRoomRent').value = '';
+    document.getElementById('billElecOld').value = '';
+}
 
 /* ============================================
    TAB SWITCHING
@@ -37,12 +108,28 @@ function switchTab(tabName) {
    CREATE BILL - FORM
    ============================================ */
 
-function populateBillingRoomDropdown() {
+function populateBillingRoomDropdown(branch) {
     const select = document.getElementById('billRoom');
     const activeContracts = DataStore.contracts.getActive();
 
+    // Filter by branch and permitted branches
+    let filtered = activeContracts;
+    if (branch) {
+        filtered = filtered.filter(c => {
+            const room = DataStore.rooms.getById(c.room_id);
+            return room && room.branch === branch;
+        });
+    }
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        filtered = filtered.filter(c => {
+            const room = DataStore.rooms.getById(c.room_id);
+            return room && permitted.includes(room.branch);
+        });
+    }
+
     let options = '<option value="">— Chọn phòng —</option>';
-    activeContracts.forEach(c => {
+    filtered.forEach(c => {
         options += `<option value="${c.room_id}" data-contract='${JSON.stringify(c)}'>${c.room_number} — ${c.tenant_name}</option>`;
     });
     select.innerHTML = options;
@@ -221,7 +308,15 @@ async function saveBill() {
    ============================================ */
 
 function loadBillingHistory() {
-    const bills = DataStore.bills.getAll();
+    let bills = DataStore.bills.getAll();
+    // Filter by permitted branches
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        bills = bills.filter(b => {
+            const room = DataStore.rooms.getById(b.room_id);
+            return room && permitted.includes(room.branch);
+        });
+    }
     const tbody = document.getElementById('billsHistoryBody');
     const countEl = document.getElementById('billCount');
 

@@ -117,10 +117,25 @@ function populateBranchFilter() {
    ADD ROOM
    ============================================ */
 
+function populateRoomBranchSelect(selectedValue) {
+    const select = document.getElementById('roomBranch');
+    if (!select) return;
+
+    const settings = DataStore.settings.get();
+    const branches = settings.branches || [];
+
+    select.innerHTML = '<option value="">-- Chọn cơ sở --</option>';
+    branches.forEach(b => {
+        const selected = (b === selectedValue) ? ' selected' : '';
+        select.innerHTML += `<option value="${b}"${selected}>${b}</option>`;
+    });
+}
+
 function openAddRoom() {
     document.getElementById('roomModalTitle').textContent = 'Thêm phòng mới';
     document.getElementById('roomForm').reset();
     document.getElementById('roomId').value = '';
+    populateRoomBranchSelect('');
     Modal.open('roomModal');
 }
 
@@ -136,6 +151,10 @@ async function saveRoom() {
 
     if (!data.room_number) {
         Toast.warning('Vui lòng nhập số phòng.');
+        return;
+    }
+    if (!data.branch) {
+        Toast.warning('Vui lòng chọn cơ sở.');
         return;
     }
     if (!data.base_price || parseInt(data.base_price) <= 0) {
@@ -169,7 +188,7 @@ function openEditRoom(id) {
     document.getElementById('roomModalTitle').textContent = 'Sửa phòng ' + room.room_number;
     document.getElementById('roomId').value = room.id;
     document.getElementById('roomNumber').value = room.room_number;
-    document.getElementById('roomBranch').value = room.branch || '';
+    populateRoomBranchSelect(room.branch || '');
     document.getElementById('roomPrice').value = room.base_price;
     document.getElementById('roomArea').value = room.area || '';
     document.getElementById('roomDescription').value = room.description || '';

@@ -390,6 +390,7 @@ const DataStore = {
                 ],
                 branches: [],
                 branch_qr_codes: {},  // { "Cơ sở 1": "data:image/png;base64,...", ... }
+                branch_addresses: {},  // { "Cơ sở 1": "123 Đường ABC, Quận 1", ... }
                 assistant_accounts: [],  // [{ email, password, display_name, assigned_branches }]
                 landlord_name: '',
                 landlord_phone: '',

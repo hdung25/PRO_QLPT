@@ -17,9 +17,52 @@ document.addEventListener('DOMContentLoaded', () => {
     DataStore.listen('rooms', () => {
         // Re-render when rooms change
     });
-    DataStore.listenSettings(() => { });
+    DataStore.listenSettings(() => {
+        populateBranchFilter();
+    });
     Modal.initCloseOnOverlay();
 });
+
+/* ============================================
+   BRANCH FILTER (toolbar + modal)
+   ============================================ */
+
+function populateBranchFilter() {
+    const settings = DataStore.settings.get();
+    let branches = settings.branches || [];
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        branches = branches.filter(b => permitted.includes(b));
+    }
+
+    // Toolbar filter dropdown
+    const filterSelect = document.getElementById('filterContractBranch');
+    if (filterSelect) {
+        const current = filterSelect.value;
+        let html = '<option value="">Tất cả cơ sở</option>';
+        branches.forEach(b => { html += `<option value="${b}">${b}</option>`; });
+        filterSelect.innerHTML = html;
+        if (current) filterSelect.value = current;
+    }
+
+    // Modal branch dropdown
+    const modalSelect = document.getElementById('contractBranch');
+    if (modalSelect) {
+        let html = '<option value="">— Chọn cơ sở —</option>';
+        branches.forEach(b => { html += `<option value="${b}">${b}</option>`; });
+        modalSelect.innerHTML = html;
+        // Auto-select if only 1 branch
+        if (branches.length === 1) {
+            modalSelect.value = branches[0];
+            onContractBranchChange();
+        }
+    }
+}
+
+function onContractBranchChange() {
+    const branch = document.getElementById('contractBranch').value;
+    populateRoomDropdown(null, branch);
+}
 
 function renderContracts(contracts) {
     loadContracts();
@@ -57,7 +100,7 @@ function loadContracts() {
     if (contracts.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7">
+                <td colspan="8">
                     <div class="empty-state">
                         <div class="empty-icon">📋</div>
                         <h3>Chưa có hợp đồng nào</h3>
@@ -76,10 +119,13 @@ function loadContracts() {
         const statusBadge = getContractBadge(c);
         const startDate = formatDate(c.start_date);
         const endDate = formatDate(c.end_date);
+        const room = DataStore.rooms.getById(c.room_id);
+        const branchName = room ? (room.branch || '—') : '—';
 
         return `
         <tr>
             <td><strong>${c.room_number}</strong></td>
+            <td>${branchName}</td>
             <td><strong>${c.tenant_name}</strong></td>
             <td>${c.tenant_phone || '—'}</td>
             <td>${startDate} → ${endDate}</td>
@@ -129,7 +175,9 @@ function openAddContract() {
     document.getElementById('contractId').value = '';
     uploadedFiles = { id_card_front: '', id_card_back: '', contract_image: '' };
     clearPreviews();
-    populateRoomDropdown();
+    populateBranchFilter(); // Refresh branches
+    // Reset room dropdown
+    document.getElementById('contractRoom').innerHTML = '<option value="">— Chọn cơ sở trước —</option>';
 
     // Set default dates
     const today = new Date().toISOString().split('T')[0];
@@ -141,15 +189,24 @@ function openAddContract() {
     Modal.open('contractModal');
 }
 
-function populateRoomDropdown(selectedRoomId) {
+function populateRoomDropdown(selectedRoomId, branch) {
     const select = document.getElementById('contractRoom');
-    const availableRooms = DataStore.rooms.getAvailable();
+    let availableRooms = DataStore.rooms.getAvailable();
 
-    // If editing, include the selected room too
+    // Filter by branch
+    if (branch) {
+        availableRooms = availableRooms.filter(r => r.branch === branch);
+    }
+    // Filter by permitted branches
+    const permitted = getPermittedBranches();
+    if (permitted.length > 0) {
+        availableRooms = availableRooms.filter(r => permitted.includes(r.branch));
+    }
+
     let options = '<option value="">— Chọn phòng trống —</option>';
     availableRooms.forEach(r => {
         const selected = r.id === selectedRoomId ? 'selected' : '';
-        options += `<option value="${r.id}" data-price="${r.base_price}" ${selected}>${r.room_number} — ${r.branch || ''} — ${formatMoney(r.base_price)}</option>`;
+        options += `<option value="${r.id}" data-price="${r.base_price}" ${selected}>${r.room_number} — ${formatMoney(r.base_price)}</option>`;
     });
 
     select.innerHTML = options;
@@ -373,6 +430,7 @@ async function terminateContract(id) {
 
 function filterContracts() {
     const status = document.getElementById('filterContractStatus').value;
+    const branch = document.getElementById('filterContractBranch').value;
     let contracts = DataStore.contracts.getAll();
     // Filter by permitted branches
     const permitted = getPermittedBranches();
@@ -380,6 +438,13 @@ function filterContracts() {
         contracts = contracts.filter(c => {
             const room = DataStore.rooms.getById(c.room_id);
             return room && permitted.includes(room.branch);
+        });
+    }
+    // Filter by selected branch
+    if (branch) {
+        contracts = contracts.filter(c => {
+            const room = DataStore.rooms.getById(c.room_id);
+            return room && room.branch === branch;
         });
     }
 
@@ -395,7 +460,7 @@ function renderFilteredContracts(contracts) {
 
     if (contracts.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="7">
+            <tr><td colspan="8">
                 <div class="empty-state">
                     <div class="empty-icon">🔍</div>
                     <h3>Không tìm thấy hợp đồng</h3>
@@ -412,9 +477,12 @@ function renderFilteredContracts(contracts) {
 
     tbody.innerHTML = contracts.map(c => {
         const statusBadge = getContractBadge(c);
+        const room = DataStore.rooms.getById(c.room_id);
+        const branchName = room ? (room.branch || '—') : '—';
         return `
         <tr>
             <td><strong>${c.room_number}</strong></td>
+            <td>${branchName}</td>
             <td><strong>${c.tenant_name}</strong></td>
             <td>${c.tenant_phone || '—'}</td>
             <td>${formatDate(c.start_date)} → ${formatDate(c.end_date)}</td>

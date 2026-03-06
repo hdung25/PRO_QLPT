@@ -18,7 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
             populateBillingRoomDropdown(branchSelect.value);
         }
     });
-    DataStore.listen('rooms', () => { });
+    DataStore.listen('rooms', () => {
+        // Re-populate room dropdown when rooms change  
+        const branchSelect = document.getElementById('billBranch');
+        if (branchSelect && branchSelect.value) {
+            populateBillingRoomDropdown(branchSelect.value);
+        }
+    });
     DataStore.listenSettings(() => {
         loadDefaultFees();
         populateBranchSelector();
@@ -543,9 +549,15 @@ function generateBillHtml(bill, settings) {
         `<tr><td>${f.name}</td><td class="text-right">${formatMoney(f.amount)}</td></tr>`
     ).join('');
 
+    // Get branch address from settings
+    const room = DataStore.rooms.getById(bill.room_id);
+    const branchName = room ? room.branch : '';
+    const branchAddresses = settings.branch_addresses || {};
+    const branchAddress = branchAddresses[branchName] || '';
+
     return `
-        <div class="bill-property-name">${settings.property_name || 'Nhà trọ'}</div>
-        <div class="bill-address">${settings.property_address || ''}</div>
+        <div class="bill-property-name">${settings.property_name || 'Nhà trọ'}${branchName ? ` — ${branchName}` : ''}</div>
+        <div class="bill-address">${branchAddress}</div>
         <h2>PHIẾU THU TIỀN PHÒNG</h2>
         <div class="bill-info">
             <div><strong>Phòng:</strong> ${bill.room_number}</div>

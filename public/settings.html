@@ -105,11 +105,6 @@
                                 <input type="text" class="form-control" id="settingsPropertyName"
                                     placeholder="Nhà trọ Thanh Bình">
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Địa chỉ</label>
-                                <input type="text" class="form-control" id="settingsPropertyAddress"
-                                    placeholder="123 Đường ABC, Quận 1, TP.HCM">
-                            </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Tên chủ trọ</label>
@@ -145,9 +140,9 @@
                             <h2 class="card-title">🏢 Quản lý cơ sở</h2>
                         </div>
                         <div class="card-body">
-                            <div class="form-hint mb-3">Thêm hoặc xóa các cơ sở/chi nhánh nhà trọ.</div>
+                            <div class="form-hint mb-3">Thêm cơ sở kèm địa chỉ. Địa chỉ sẽ hiển thị trên hóa đơn.</div>
                             <div id="branchesContainer"></div>
-                            <button type="button" class="add-fee-btn" onclick="addBranchRow('')">
+                            <button type="button" class="add-fee-btn" onclick="addBranchRow('', '')">
                                 <i data-lucide="plus"></i> Thêm cơ sở
                             </button>
                         </div>
@@ -180,16 +175,6 @@
                         </div>
                     </div>
 
-                    <!-- Thông tin dữ liệu -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">🗄 Dữ liệu</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-hint">Dữ liệu hiện đang lưu trên Firebase Firestore (đồng bộ realtime giữa
-                                các tài khoản).</div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Save Button -->
@@ -214,6 +199,7 @@
     <script>
         // QR codes temp storage (branch -> base64 dataURL)
         let branchQrCodes = {};
+        let branchAddresses = {};
 
         // Settings: Realtime from Firestore
         document.addEventListener('DOMContentLoaded', () => {
@@ -232,7 +218,6 @@
             document.getElementById('settingsElecPrice').value = s.electricity_price || 0;
             document.getElementById('settingsWaterPrice').value = s.water_price || 0;
             document.getElementById('settingsPropertyName').value = s.property_name || '';
-            document.getElementById('settingsPropertyAddress').value = s.property_address || '';
             document.getElementById('settingsLandlordName').value = s.landlord_name || '';
             document.getElementById('settingsLandlordPhone').value = s.landlord_phone || '';
 
@@ -241,10 +226,11 @@
             feesContainer.innerHTML = '';
             (s.default_extra_fees || []).forEach(f => addDefaultFee(f.name, f.amount));
 
-            // Branches
+            // Branches with addresses
+            branchAddresses = s.branch_addresses || {};
             const branchContainer = document.getElementById('branchesContainer');
             branchContainer.innerHTML = '';
-            (s.branches || []).forEach(b => addBranchRow(b));
+            (s.branches || []).forEach(b => addBranchRow(b, branchAddresses[b] || ''));
 
             // QR Codes
             branchQrCodes = s.branch_qr_codes || {};
@@ -267,13 +253,17 @@
             lucide.createIcons();
         }
 
-        function addBranchRow(name) {
+        function addBranchRow(name, address) {
             const container = document.getElementById('branchesContainer');
             const row = document.createElement('div');
             row.className = 'fee-row';
+            row.style.flexWrap = 'wrap';
             row.innerHTML = `
-                <input type="text" class="form-control" placeholder="VD: Cơ sở 1 - Quận 1" value="${name || ''}" style="flex:1;">
-                <button type="button" class="remove-fee" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+                <div style="display:flex; gap:8px; align-items:center; width:100%;">
+                    <input type="text" class="form-control branch-name" placeholder="VD: Cơ sở 1" value="${name || ''}" style="flex:1;">
+                    <button type="button" class="remove-fee" onclick="this.closest('.fee-row').remove()"><i data-lucide="x"></i></button>
+                </div>
+                <input type="text" class="form-control branch-address" placeholder="Địa chỉ: VD: 123 Đường ABC, Quận 1" value="${address || ''}" style="width:100%; margin-top:6px; font-size:0.85rem;">
             `;
             container.appendChild(row);
             lucide.createIcons();
@@ -293,25 +283,26 @@
                 return;
             }
 
-            container.innerHTML = branches.map(branch => {
+            container.innerHTML = branches.map((branch, idx) => {
                 const qrData = branchQrCodes[branch] || '';
                 return `
                 <div class="qr-branch-item" style="border: 1px solid var(--gray-200); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                         <strong style="font-size: 0.95rem;">📍 ${branch}</strong>
-                        ${qrData ? `<button class="btn btn-ghost btn-sm" onclick="removeQrCode('${branch}')" style="color: var(--danger-500);">
+                        ${qrData ? `<button class="btn btn-ghost btn-sm" onclick="removeQrCode('${branch.replace(/'/g, "\\'")}')"
+                            style="color: var(--danger-500);">
                             <i data-lucide="trash-2"></i> Xóa ảnh
                         </button>` : ''}
                     </div>
-                    <div id="qr-preview-${CSS.escape(branch)}" class="qr-preview-area" style="text-align: center;">
+                    <div class="qr-preview-area" style="text-align: center;">
                         ${qrData ? `<img src="${qrData}" alt="QR ${branch}" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--gray-200);">` : `
-                        <div style="border: 2px dashed var(--gray-300); border-radius: 12px; padding: 24px; cursor: pointer;" onclick="document.getElementById('qr-input-${CSS.escape(branch)}').click()">
+                        <div style="border: 2px dashed var(--gray-300); border-radius: 12px; padding: 24px; cursor: pointer;" onclick="document.getElementById('qr-input-${idx}').click()">
                             <i data-lucide="image-plus" style="width: 32px; height: 32px; color: var(--gray-400);"></i>
                             <p style="color: var(--gray-400); margin-top: 8px; font-size: 0.85rem;">Nhấn để upload ảnh QR</p>
                         </div>`}
                     </div>
-                    <input type="file" id="qr-input-${CSS.escape(branch)}" accept="image/*" style="display:none;" onchange="handleQrUpload(this, '${branch}')">
-                    ${qrData ? '' : `<button class="btn btn-outline btn-sm" style="margin-top: 8px; width: 100%;" onclick="document.getElementById('qr-input-${CSS.escape(branch)}').click()">
+                    <input type="file" id="qr-input-${idx}" accept="image/*" style="display:none;" onchange="handleQrUpload(this, '${branch.replace(/'/g, "\\'")}')">
+                    ${qrData ? '' : `<button class="btn btn-outline btn-sm" style="margin-top: 8px; width: 100%;" onclick="document.getElementById('qr-input-${idx}').click()">
                         <i data-lucide="upload"></i> Chọn ảnh QR
                     </button>`}
                 </div>`;
@@ -552,9 +543,14 @@
             });
 
             const branches = [];
+            const collectedAddresses = {};
             document.querySelectorAll('#branchesContainer .fee-row').forEach(row => {
-                const name = row.querySelector('input').value.trim();
-                if (name) branches.push(name);
+                const name = row.querySelector('.branch-name').value.trim();
+                const addr = row.querySelector('.branch-address').value.trim();
+                if (name) {
+                    branches.push(name);
+                    if (addr) collectedAddresses[name] = addr;
+                }
             });
 
             // Clean up QR codes for removed branches
@@ -567,11 +563,11 @@
                 electricity_price: parseInt(document.getElementById('settingsElecPrice').value) || 0,
                 water_price: parseInt(document.getElementById('settingsWaterPrice').value) || 0,
                 property_name: document.getElementById('settingsPropertyName').value.trim(),
-                property_address: document.getElementById('settingsPropertyAddress').value.trim(),
                 landlord_name: document.getElementById('settingsLandlordName').value.trim(),
                 landlord_phone: document.getElementById('settingsLandlordPhone').value.trim(),
                 default_extra_fees: defaultFees,
                 branches: branches,
+                branch_addresses: collectedAddresses,
                 branch_qr_codes: cleanedQrCodes,
                 assistant_accounts: assistantAccounts
             };
@@ -579,6 +575,7 @@
             try {
                 await DataStore.settings.save(data);
                 branchQrCodes = cleanedQrCodes;
+                branchAddresses = collectedAddresses;
                 Toast.success('Lưu cài đặt thành công!');
             } catch (error) {
                 Toast.error('Lỗi khi lưu: ' + error.message);

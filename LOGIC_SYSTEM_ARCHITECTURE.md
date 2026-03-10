@@ -1,4 +1,4 @@
-# 🏗️ LOGIC SYSTEM ARCHITECTURE
+    # 🏗️ LOGIC SYSTEM ARCHITECTURE
 ## Hệ thống Quản lý Nhà trọ - Kiến trúc & Luồng dữ liệu
 
 > **Phiên bản:** 1.0  

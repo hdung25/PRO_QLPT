@@ -7,12 +7,12 @@
   "theme_color": "#0ea5e9",
   "icons": [
     {
-      "src": "/assets/images/logo.png?v=2",
+      "src": "/assets/images/nt-nt-logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/assets/images/logo.png?v=2",
+      "src": "/assets/images/nt-nt-logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }

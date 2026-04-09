@@ -240,7 +240,6 @@ async function saveContract() {
     };
 
     if (!data.room_id) { Toast.warning('Vui lòng chọn phòng.'); return; }
-    if (!data.start_date || !data.end_date) { Toast.warning('Vui lòng nhập ngày hợp đồng.'); return; }
 
     try {
         if (id) {

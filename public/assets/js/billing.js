@@ -364,6 +364,7 @@ function loadBillingHistory() {
                     <button class="btn btn-ghost btn-icon sm" onclick="printBill('${b.id}')" title="In phiếu"><i data-lucide="printer"></i></button>
                     <button class="btn btn-ghost btn-icon sm" onclick="exportPdf('${b.id}')" title="Xuất PDF"><i data-lucide="download"></i></button>
                     ${b.payment_status === 'unpaid' ? `<button class="btn btn-ghost btn-icon sm" onclick="markBillPaid('${b.id}')" title="Đánh dấu đã TT" style="color:var(--success-500);"><i data-lucide="check-circle"></i></button>` : ''}
+                    <button class="btn btn-ghost btn-icon sm" onclick="deleteBill('${b.id}')" title="Xoá hóa đơn" style="color:var(--danger-500);"><i data-lucide="trash-2"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -385,6 +386,18 @@ async function markBillPaid(id) {
     try {
         await DataStore.bills.markPaid(id);
         Toast.success('Đã đánh dấu thanh toán!');
+    } catch (error) {
+        Toast.error(error.message);
+    }
+}
+
+async function deleteBill(id) {
+    const ok = await confirmAction('Bạn có chắc muốn xoá hóa đơn này?', 'Xoá hóa đơn');
+    if (!ok) return;
+
+    try {
+        await DataStore.bills.delete(id);
+        Toast.success('Đã xoá hóa đơn.');
     } catch (error) {
         Toast.error(error.message);
     }

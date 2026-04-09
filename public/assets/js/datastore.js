@@ -273,7 +273,22 @@ const DataStore = {
         },
 
         async delete(id) {
-            await db.collection('contracts').doc(id).delete();
+            const contract = this.getById(id);
+            const batch = db.batch();
+            batch.delete(db.collection('contracts').doc(id));
+            // If contract was active, revert room to available
+            if (contract && contract.status === 'active') {
+                const otherActive = this.getAll().find(
+                    c => c.room_id === contract.room_id && c.status === 'active' && c.id !== id
+                );
+                if (!otherActive) {
+                    batch.update(db.collection('rooms').doc(contract.room_id), {
+                        status: 'available',
+                        updated_at: new Date().toISOString()
+                    });
+                }
+            }
+            await batch.commit();
             return true;
         },
 
@@ -377,6 +392,11 @@ const DataStore = {
                 payment_status: 'paid',
                 payment_date: new Date().toISOString()
             });
+        },
+
+        async delete(id) {
+            await db.collection('bills').doc(id).delete();
+            return true;
         }
     },
 

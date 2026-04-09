@@ -136,6 +136,9 @@ function loadContracts() {
                     <button class="btn btn-ghost btn-icon sm" onclick="viewContract('${c.id}')" title="Xem chi tiết">
                         <i data-lucide="eye"></i>
                     </button>
+                    <button class="btn btn-ghost btn-icon sm" onclick="deleteContract('${c.id}')" title="Xoá hợp đồng" style="color:var(--danger-500);">
+                        <i data-lucide="trash-2"></i>
+                    </button>
                     ${c.status === 'active' ? `
                     <button class="btn btn-ghost btn-icon sm" onclick="openSwitchTenant('${c.id}')" title="Đổi người thuê">
                         <i data-lucide="repeat"></i>
@@ -237,7 +240,6 @@ async function saveContract() {
     };
 
     if (!data.room_id) { Toast.warning('Vui lòng chọn phòng.'); return; }
-    if (!data.tenant_name) { Toast.warning('Vui lòng nhập tên người thuê.'); return; }
     if (!data.start_date || !data.end_date) { Toast.warning('Vui lòng nhập ngày hợp đồng.'); return; }
 
     try {
@@ -425,6 +427,22 @@ async function terminateContract(id) {
 }
 
 /* ============================================
+   DELETE CONTRACT
+   ============================================ */
+
+async function deleteContract(id) {
+    const ok = await confirmAction('Bạn có chắc muốn xoá hợp đồng này?', 'Xoá hợp đồng');
+    if (!ok) return;
+
+    try {
+        await DataStore.contracts.delete(id);
+        Toast.success('Đã xoá hợp đồng.');
+    } catch (error) {
+        Toast.error(error.message);
+    }
+}
+
+/* ============================================
    FILTER
    ============================================ */
 
@@ -491,6 +509,7 @@ function renderFilteredContracts(contracts) {
             <td>
                 <div class="action-cell">
                     <button class="btn btn-ghost btn-icon sm" onclick="viewContract('${c.id}')" title="Xem"><i data-lucide="eye"></i></button>
+                    <button class="btn btn-ghost btn-icon sm" onclick="deleteContract('${c.id}')" title="Xoá hợp đồng" style="color:var(--danger-500);"><i data-lucide="trash-2"></i></button>
                     ${c.status === 'active' ? `
                     <button class="btn btn-ghost btn-icon sm" onclick="openSwitchTenant('${c.id}')" title="Đổi người thuê"><i data-lucide="repeat"></i></button>
                     <button class="btn btn-ghost btn-icon sm" onclick="terminateContract('${c.id}')" title="Kết thúc" style="color:var(--danger-500);"><i data-lucide="x-circle"></i></button>` : ''}

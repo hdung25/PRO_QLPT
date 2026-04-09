@@ -272,6 +272,11 @@ const DataStore = {
             return true;
         },
 
+        async delete(id) {
+            await db.collection('contracts').doc(id).delete();
+            return true;
+        },
+
         async switchTenant(oldContractId, newData) {
             const oldContract = this.getById(oldContractId);
             if (!oldContract) throw new Error('Hợp đồng cũ không tồn tại.');
